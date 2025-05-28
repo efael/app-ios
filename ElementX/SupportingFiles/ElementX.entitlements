@@ -14,7 +14,11 @@
 		<string>applinks:call.element.io</string>
 		<string>applinks:call.element.dev</string>
 		<string>applinks:matrix.to</string>
+		<string>applinks:efael.net</string>
+		<string>applinks:chat.element.io</string>
+		<string>applinks:mobile.efael.net</string>
 		<string>webcredentials:*.element.io</string>
+		<string>webcredentials:*.efael.net</string>
 	</array>
 	<key>com.apple.developer.usernotifications.communication</key>
 	<true/>

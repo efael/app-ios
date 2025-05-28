@@ -169,27 +169,27 @@ final class AppSettings {
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
 
     /// A URL where users can go read more about the app.
-    private(set) var websiteURL: URL = "https://element.io"
+    private(set) var websiteURL: URL = "https://efael.net"
     /// A URL that contains the app's logo that may be used when showing content in a web view.
-    private(set) var logoURL: URL = "https://element.io/mobile-icon.png"
+    private(set) var logoURL: URL = "https://efael.net/mobile-icon.png"
     /// A URL that contains that app's copyright notice.
-    private(set) var copyrightURL: URL = "https://element.io/copyright"
+    private(set) var copyrightURL: URL = "https://efael.net/copyright"
     /// A URL that contains the app's Terms of use.
-    private(set) var acceptableUseURL: URL = "https://element.io/acceptable-use-policy-terms"
+    private(set) var acceptableUseURL: URL = "https://efael.net/acceptable-use-policy-terms"
     /// A URL that contains the app's Privacy Policy.
-    private(set) var privacyURL: URL = "https://element.io/privacy"
+    private(set) var privacyURL: URL = "https://efael.net/privacy"
     /// A URL where users can go read more about encryption in general.
-    private(set) var encryptionURL: URL = "https://element.io/help#encryption"
+    private(set) var encryptionURL: URL = "https://efael.net/help#encryption"
     /// A URL where users can go read more about device verification..
-    private(set) var deviceVerificationURL: URL = "https://element.io/help#encryption-device-verification"
+    private(set) var deviceVerificationURL: URL = "https://efael.net/help#encryption-device-verification"
     /// A URL where users can go read more about the chat backup.
-    private(set) var chatBackupDetailsURL: URL = "https://element.io/help#encryption5"
+    private(set) var chatBackupDetailsURL: URL = "https://efael.net/help#encryption5"
     /// A URL where users can go read more about identity pinning violations
-    private(set) var identityPinningViolationDetailsURL: URL = "https://element.io/help#encryption18"
+    private(set) var identityPinningViolationDetailsURL: URL = "https://efael.net/help#encryption18"
     /// Any domains that Element web may be hosted on - used for handling links.
-    private(set) var elementWebHosts = ["app.element.io", "staging.element.io", "develop.element.io"]
+    private(set) var elementWebHosts = ["chat.efael.net"]
     /// The domain that account provisioning links will be hosted on - used for handling the links.
-    private(set) var accountProvisioningHost = "mobile.element.io"
+    private(set) var accountProvisioningHost = "auth.efael.net"
     
     @UserPreference(key: UserDefaultsKeys.appAppearance, defaultValue: .system, storageType: .userDefaults(store))
     var appAppearance: AppAppearance
@@ -211,7 +211,7 @@ final class AppSettings {
     /// Any pre-defined static client registrations for OIDC issuers.
     let oidcStaticRegistrations: [URL: String] = ["https://id.thirdroom.io/realms/thirdroom": "elementx"]
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
-    private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
+    private(set) var oidcRedirectURL: URL = "https://efael.net/oidc/login"
     
     private(set) lazy var oidcConfiguration = OIDCConfigurationProxy(clientName: InfoPlistReader.main.bundleDisplayName,
                                                                      redirectURI: oidcRedirectURL,
@@ -236,7 +236,7 @@ final class AppSettings {
         #endif
     }
     
-    private(set) var pushGatewayBaseURL: URL = "https://matrix.org"
+    private(set) var pushGatewayBaseURL: URL = "https://efael.net"
     var pushGatewayNotifyEndpoint: URL { pushGatewayBaseURL.appending(path: "_matrix/push/v1/notify") }
     
     @UserPreference(key: UserDefaultsKeys.enableNotifications, defaultValue: true, storageType: .userDefaults(store))
