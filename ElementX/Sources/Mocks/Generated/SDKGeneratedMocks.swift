@@ -1050,6 +1050,75 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
     }
 
+    //MARK: - fetchMediaPreviewConfig
+
+    open var fetchMediaPreviewConfigThrowableError: Error?
+    var fetchMediaPreviewConfigUnderlyingCallsCount = 0
+    open var fetchMediaPreviewConfigCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return fetchMediaPreviewConfigUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = fetchMediaPreviewConfigUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                fetchMediaPreviewConfigUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    fetchMediaPreviewConfigUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var fetchMediaPreviewConfigCalled: Bool {
+        return fetchMediaPreviewConfigCallsCount > 0
+    }
+
+    var fetchMediaPreviewConfigUnderlyingReturnValue: MediaPreviewConfig?
+    open var fetchMediaPreviewConfigReturnValue: MediaPreviewConfig? {
+        get {
+            if Thread.isMainThread {
+                return fetchMediaPreviewConfigUnderlyingReturnValue
+            } else {
+                var returnValue: MediaPreviewConfig?? = nil
+                DispatchQueue.main.sync {
+                    returnValue = fetchMediaPreviewConfigUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                fetchMediaPreviewConfigUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    fetchMediaPreviewConfigUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var fetchMediaPreviewConfigClosure: (() async throws -> MediaPreviewConfig?)?
+
+    open override func fetchMediaPreviewConfig() async throws -> MediaPreviewConfig? {
+        if let error = fetchMediaPreviewConfigThrowableError {
+            throw error
+        }
+        fetchMediaPreviewConfigCallsCount += 1
+        if let fetchMediaPreviewConfigClosure = fetchMediaPreviewConfigClosure {
+            return try await fetchMediaPreviewConfigClosure()
+        } else {
+            return fetchMediaPreviewConfigReturnValue
+        }
+    }
+
     //MARK: - getDmRoom
 
     open var getDmRoomUserIdThrowableError: Error?
@@ -1156,13 +1225,13 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         return getInviteAvatarsDisplayPolicyCallsCount > 0
     }
 
-    var getInviteAvatarsDisplayPolicyUnderlyingReturnValue: InviteAvatars!
-    open var getInviteAvatarsDisplayPolicyReturnValue: InviteAvatars! {
+    var getInviteAvatarsDisplayPolicyUnderlyingReturnValue: InviteAvatars?
+    open var getInviteAvatarsDisplayPolicyReturnValue: InviteAvatars? {
         get {
             if Thread.isMainThread {
                 return getInviteAvatarsDisplayPolicyUnderlyingReturnValue
             } else {
-                var returnValue: InviteAvatars? = nil
+                var returnValue: InviteAvatars?? = nil
                 DispatchQueue.main.sync {
                     returnValue = getInviteAvatarsDisplayPolicyUnderlyingReturnValue
                 }
@@ -1180,9 +1249,9 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
             }
         }
     }
-    open var getInviteAvatarsDisplayPolicyClosure: (() async throws -> InviteAvatars)?
+    open var getInviteAvatarsDisplayPolicyClosure: (() async throws -> InviteAvatars?)?
 
-    open override func getInviteAvatarsDisplayPolicy() async throws -> InviteAvatars {
+    open override func getInviteAvatarsDisplayPolicy() async throws -> InviteAvatars? {
         if let error = getInviteAvatarsDisplayPolicyThrowableError {
             throw error
         }
@@ -1375,13 +1444,13 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         return getMediaPreviewDisplayPolicyCallsCount > 0
     }
 
-    var getMediaPreviewDisplayPolicyUnderlyingReturnValue: MediaPreviews!
-    open var getMediaPreviewDisplayPolicyReturnValue: MediaPreviews! {
+    var getMediaPreviewDisplayPolicyUnderlyingReturnValue: MediaPreviews?
+    open var getMediaPreviewDisplayPolicyReturnValue: MediaPreviews? {
         get {
             if Thread.isMainThread {
                 return getMediaPreviewDisplayPolicyUnderlyingReturnValue
             } else {
-                var returnValue: MediaPreviews? = nil
+                var returnValue: MediaPreviews?? = nil
                 DispatchQueue.main.sync {
                     returnValue = getMediaPreviewDisplayPolicyUnderlyingReturnValue
                 }
@@ -1399,9 +1468,9 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
             }
         }
     }
-    open var getMediaPreviewDisplayPolicyClosure: (() async throws -> MediaPreviews)?
+    open var getMediaPreviewDisplayPolicyClosure: (() async throws -> MediaPreviews?)?
 
-    open override func getMediaPreviewDisplayPolicy() async throws -> MediaPreviews {
+    open override func getMediaPreviewDisplayPolicy() async throws -> MediaPreviews? {
         if let error = getMediaPreviewDisplayPolicyThrowableError {
             throw error
         }
@@ -13680,71 +13749,6 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
         }
     }
 
-    //MARK: - isTombstoned
-
-    var isTombstonedUnderlyingCallsCount = 0
-    open var isTombstonedCallsCount: Int {
-        get {
-            if Thread.isMainThread {
-                return isTombstonedUnderlyingCallsCount
-            } else {
-                var returnValue: Int? = nil
-                DispatchQueue.main.sync {
-                    returnValue = isTombstonedUnderlyingCallsCount
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                isTombstonedUnderlyingCallsCount = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    isTombstonedUnderlyingCallsCount = newValue
-                }
-            }
-        }
-    }
-    open var isTombstonedCalled: Bool {
-        return isTombstonedCallsCount > 0
-    }
-
-    var isTombstonedUnderlyingReturnValue: Bool!
-    open var isTombstonedReturnValue: Bool! {
-        get {
-            if Thread.isMainThread {
-                return isTombstonedUnderlyingReturnValue
-            } else {
-                var returnValue: Bool? = nil
-                DispatchQueue.main.sync {
-                    returnValue = isTombstonedUnderlyingReturnValue
-                }
-
-                return returnValue!
-            }
-        }
-        set {
-            if Thread.isMainThread {
-                isTombstonedUnderlyingReturnValue = newValue
-            } else {
-                DispatchQueue.main.sync {
-                    isTombstonedUnderlyingReturnValue = newValue
-                }
-            }
-        }
-    }
-    open var isTombstonedClosure: (() -> Bool)?
-
-    open override func isTombstoned() -> Bool {
-        isTombstonedCallsCount += 1
-        if let isTombstonedClosure = isTombstonedClosure {
-            return isTombstonedClosure()
-        } else {
-            return isTombstonedReturnValue
-        }
-    }
-
     //MARK: - join
 
     open var joinThrowableError: Error?
@@ -14894,6 +14898,71 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
             return ownUserIdClosure()
         } else {
             return ownUserIdReturnValue
+        }
+    }
+
+    //MARK: - predecessorRoom
+
+    var predecessorRoomUnderlyingCallsCount = 0
+    open var predecessorRoomCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return predecessorRoomUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = predecessorRoomUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                predecessorRoomUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    predecessorRoomUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var predecessorRoomCalled: Bool {
+        return predecessorRoomCallsCount > 0
+    }
+
+    var predecessorRoomUnderlyingReturnValue: PredecessorRoom?
+    open var predecessorRoomReturnValue: PredecessorRoom? {
+        get {
+            if Thread.isMainThread {
+                return predecessorRoomUnderlyingReturnValue
+            } else {
+                var returnValue: PredecessorRoom?? = nil
+                DispatchQueue.main.sync {
+                    returnValue = predecessorRoomUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                predecessorRoomUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    predecessorRoomUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var predecessorRoomClosure: (() -> PredecessorRoom?)?
+
+    open override func predecessorRoom() -> PredecessorRoom? {
+        predecessorRoomCallsCount += 1
+        if let predecessorRoomClosure = predecessorRoomClosure {
+            return predecessorRoomClosure()
+        } else {
+            return predecessorRoomReturnValue
         }
     }
 
@@ -16472,6 +16541,71 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
             return subscribeToTypingNotificationsListenerClosure(listener)
         } else {
             return subscribeToTypingNotificationsListenerReturnValue
+        }
+    }
+
+    //MARK: - successorRoom
+
+    var successorRoomUnderlyingCallsCount = 0
+    open var successorRoomCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return successorRoomUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = successorRoomUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                successorRoomUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    successorRoomUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var successorRoomCalled: Bool {
+        return successorRoomCallsCount > 0
+    }
+
+    var successorRoomUnderlyingReturnValue: SuccessorRoom?
+    open var successorRoomReturnValue: SuccessorRoom? {
+        get {
+            if Thread.isMainThread {
+                return successorRoomUnderlyingReturnValue
+            } else {
+                var returnValue: SuccessorRoom?? = nil
+                DispatchQueue.main.sync {
+                    returnValue = successorRoomUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                successorRoomUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    successorRoomUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var successorRoomClosure: (() -> SuccessorRoom?)?
+
+    open override func successorRoom() -> SuccessorRoom? {
+        successorRoomCallsCount += 1
+        if let successorRoomClosure = successorRoomClosure {
+            return successorRoomClosure()
+        } else {
+            return successorRoomReturnValue
         }
     }
 
