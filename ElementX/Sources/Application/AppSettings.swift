@@ -159,7 +159,7 @@ final class AppSettings {
     /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
     private(set) var accountProviders = ["efael.net"]
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
-    private(set) var allowOtherAccountProviders = true
+    private(set) var allowOtherAccountProviders = false
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
