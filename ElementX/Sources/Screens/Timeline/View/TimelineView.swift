@@ -10,6 +10,7 @@ import WysiwygComposer
 
 struct TimelineView: View {
     @ObservedObject var timelineContext: TimelineViewModel.Context
+    @State private var dragOver = false
     
     var body: some View {
         TimelineViewRepresentable()
@@ -32,6 +33,7 @@ struct TimelineView: View {
                                                              pinnedEventIDs: timelineContext.viewState.pinnedEventIDs,
                                                              isDM: timelineContext.viewState.isDirectOneToOneRoom,
                                                              isViewSourceEnabled: timelineContext.viewState.isViewSourceEnabled,
+                                                             areThreadsEnabled: timelineContext.viewState.areThreadsEnabled,
                                                              timelineKind: timelineContext.viewState.timelineKind,
                                                              emojiProvider: timelineContext.viewState.emojiProvider)
                     .makeActions()
@@ -50,6 +52,15 @@ struct TimelineView: View {
             .sheet(item: $timelineContext.readReceiptsSummaryInfo) {
                 ReadReceiptsSummaryView(orderedReadReceipts: $0.orderedReceipts)
                     .environmentObject(timelineContext)
+            }
+            .onDrop(of: ["public.item", "public.file-url"], isTargeted: $dragOver) { providers -> Bool in
+                guard let provider = providers.first,
+                      provider.isSupportedForPasteOrDrop else {
+                    return false
+                }
+                
+                timelineContext.send(viewAction: .handlePasteOrDrop(provider: provider))
+                return true
             }
     }
 }
@@ -142,8 +153,8 @@ struct TimelineView_Previews: PreviewProvider, TestablePreview {
 
     static var previews: some View {
         NavigationStack {
-            RoomScreen(roomViewModel: roomViewModel,
-                       timelineViewModel: timelineViewModel,
+            RoomScreen(context: roomViewModel.context,
+                       timelineContext: timelineViewModel.context,
                        composerToolbar: ComposerToolbar.mock())
         }
     }

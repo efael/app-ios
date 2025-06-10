@@ -45,6 +45,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -125,6 +126,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -175,6 +177,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -214,6 +217,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: ongoingCallRoomIDSubject.asCurrentValuePublisher(),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -244,6 +248,29 @@ class RoomScreenViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.state.shouldShowCallButton)
     }
     
+    func testRoomFullyRead() async {
+        let expectation = XCTestExpectation(description: "Wait for fully read")
+        let roomProxyMock = JoinedRoomProxyMock(.init(id: "MyRoomID"))
+        roomProxyMock.markAsReadReceiptTypeClosure = { readReceiptType in
+            XCTAssertEqual(readReceiptType, .fullyRead)
+            expectation.fulfill()
+            return .success(())
+        }
+        let viewModel = RoomScreenViewModel(clientProxy: ClientProxyMock(),
+                                            roomProxy: roomProxyMock,
+                                            initialSelectedPinnedEventID: nil,
+                                            mediaProvider: MediaProviderMock(configuration: .init()),
+                                            ongoingCallRoomIDPublisher: .init(.init(nil)),
+                                            appMediator: AppMediatorMock.default,
+                                            appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
+                                            analyticsService: ServiceLocator.shared.analytics,
+                                            userIndicatorController: ServiceLocator.shared.userIndicatorController)
+        self.viewModel = viewModel
+        viewModel.stop()
+        await fulfillment(of: [expectation])
+    }
+    
     // MARK: - Knock Requests
     
     func testKnockRequestBanner() async throws {
@@ -259,6 +286,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -294,6 +322,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -324,6 +353,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
@@ -345,6 +375,7 @@ class RoomScreenViewModelTests: XCTestCase {
                                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                                             appMediator: AppMediatorMock.default,
                                             appSettings: ServiceLocator.shared.settings,
+                                            appHooks: AppHooks(),
                                             analyticsService: ServiceLocator.shared.analytics,
                                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
         self.viewModel = viewModel
