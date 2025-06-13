@@ -181,6 +181,9 @@ struct ComposerToolbar: View {
         } onAppearAction: {
             context.send(viewAction: .composerAppeared)
         }
+        .onDisappear {
+            context.send(viewAction: .composerDisappeared)
+        }
         .environmentObject(context)
         .focused($composerFocused)
         .padding(.leading, context.composerFormattingEnabled ? 7 : 0)
@@ -324,7 +327,7 @@ struct ComposerToolbar_Previews: PreviewProvider, TestablePreview {
                                                             mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                             appSettings: ServiceLocator.shared.settings,
                                                             analyticsService: ServiceLocator.shared.analytics,
-                                                            composerDraftService: ComposerDraftServiceMock())
+                                                            composerDraftService: ComposerDraftServiceMock(.init()))
     
     static let suggestions: [SuggestionItem] = [
         .init(suggestionType: .user(.init(id: "@user_mention_1:matrix.org", displayName: "User 1", avatarURL: nil)), range: .init(), rawSuggestionText: ""),
@@ -374,7 +377,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerEmpty = focused
             return model
         }
@@ -391,7 +394,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerEmpty = focused
             return model
         }
@@ -408,7 +411,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = .recordVoiceMessage(state: AudioRecorderState())
             return model
         }
@@ -426,7 +429,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = .previewVoiceMessage(state: AudioPlayerState(id: .recorderPreview,
                                                                                     title: L10n.commonVoiceMessage,
                                                                                     duration: 10.0),
@@ -447,7 +450,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.composerMode = isLoading ? .reply(eventID: UUID().uuidString,
                                                           replyDetails: .loading(eventID: ""),
                                                           isThread: false) :
@@ -470,7 +473,7 @@ extension ComposerToolbar {
                                                  mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                  appSettings: ServiceLocator.shared.settings,
                                                  analyticsService: ServiceLocator.shared.analytics,
-                                                 composerDraftService: ComposerDraftServiceMock())
+                                                 composerDraftService: ComposerDraftServiceMock(.init()))
             model.state.canSend = false
             return model
         }

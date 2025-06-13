@@ -49,7 +49,7 @@ struct RoomAttachmentPicker: View {
                 .accessibilityIdentifier(A11yIdentifiers.roomScreen.attachmentPickerPoll)
             }
             
-            if !context.viewState.isInThread, context.viewState.isLocationSharingEnabled {
+            if context.viewState.isLocationSharingEnabled {
                 Button {
                     context.send(viewAction: .attach(.location))
                 } label: {
@@ -97,7 +97,7 @@ struct RoomAttachmentPicker_Previews: PreviewProvider, TestablePreview {
                                                     mentionDisplayHelper: ComposerMentionDisplayHelper.mock,
                                                     appSettings: ServiceLocator.shared.settings,
                                                     analyticsService: ServiceLocator.shared.analytics,
-                                                    composerDraftService: ComposerDraftServiceMock())
+                                                    composerDraftService: ComposerDraftServiceMock(.init()))
 
     static var previews: some View {
         RoomAttachmentPicker(context: viewModel.context)
