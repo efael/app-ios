@@ -260,7 +260,7 @@ final class AppSettings {
     // MARK: - Analytics
     
     /// The configuration to use for analytics. Set to `nil` to disable analytics.
-    let analyticsConfiguration: AnalyticsConfiguration? = AppSettings.makeAnalyticsConfiguration()
+    let analyticsConfiguration: AnalyticsConfiguration? = nil // AppSettings.makeAnalyticsConfiguration()
     /// The URL to open with more information about analytics terms. When this is `nil` the "Learn more" link will be hidden.
     private(set) var analyticsTermsURL: URL? = "https://element.io/cookie-policy"
     /// Whether or not there the app is able ask for user consent to enable analytics or sentry reporting.
