@@ -1,3 +1,57 @@
+## Changes in 25.06.5 (2025-06-19)
+
+### What's Changed
+
+🐛 Bugfixes
+* Stop failing bug reports when the reportURL is omitted. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4221
+* Hide timeline item actions that the user's power level does not allow by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4227
+* Fix thread summaries being shown when the thread feature flag was disabled. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4228
+* Fix MediaTimeline screen header iOS 26 crash, update remaining version predicates. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4229
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4225
+
+🧱 Build
+* Add a section for pr-a11y in the release notes. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4223
+* Run Xcode select on the Translations and CalVer workflows. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4224
+
+Others
+* Update ui tests for the poll form screen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4226
+* Bump various dependencies by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4216
+* Move all Introspect VersionPredicates into Compound to have them all in the same place. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4230
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.4...release/25.06.5
+
+## Changes in 25.06.4 (2025-06-18)
+
+### What's Changed
+
+✨ Features
+* Thread aware drafting by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4197
+
+🐛 Bugfixes
+* Fixes #4180 - Prevent room header autolayout crashes on iOS 26. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4191
+* Bump Compound and prevent Introspect from breaking on newer OS versions. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4203
+* Fix OS 26 crashes when not running a development build by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4217
+
+🚧 In development 🚧
+* Allow sending locations within threads and render the number of replies in their summaries. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4192
+
+Others
+* Update dependency jpsim/Yams to from: "6.0.1" by @renovate in https://github.com/element-hq/element-x-ios/pull/4189
+* Add state to the accessibility label of RTE formatting buttons by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4194
+* Exclude protocol files from code coverage checks. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4196
+* Improved the accessibility in PollFormScreen by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4200
+* Focus voice over automatically when focussing a timeline event by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4206
+* Improved a11y in `CollapsibleRoomTimelineView` by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4208
+* Improved reactions a11y by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4215
+* Flip the timeline for voice over users by @Velin92 in https://github.com/element-hq/element-x-ios/pull/4212
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4220
+
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.06.3...release/25.06.4
+
 ## Changes in 25.06.3 (2025-06-11)
 
 ### What's Changed
