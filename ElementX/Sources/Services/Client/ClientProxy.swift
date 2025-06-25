@@ -299,6 +299,17 @@ class ClientProxy: ClientProxyProtocol {
             }
         }
     }
+    
+    var isLiveKitRTCSupported: Bool {
+        get async {
+            do {
+                return try await client.isLivekitRtcSupported()
+            } catch {
+                MXLog.error("Failed checking LiveKit RTC support with error: \(error)")
+                return false
+            }
+        }
+    }
 
     private(set) lazy var pusherNotificationClientIdentifier: String? = {
         // NOTE: The result is stored as part of the restoration token. Any changes
@@ -741,7 +752,7 @@ class ClientProxy: ClientProxyProtocol {
     
     func clearCaches() async -> Result<Void, ClientProxyError> {
         do {
-            return try await .success(client.clearCaches())
+            return try await .success(client.clearCaches(syncService: syncService))
         } catch {
             MXLog.error("Failed clearing client caches with error: \(error)")
             return .failure(.sdkError(error))

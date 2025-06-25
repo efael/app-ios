@@ -332,7 +332,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         }
     }
     
-    private func handleRoomInfoUpdate(_ roomInfo: RoomInfoProxy) async {
+    private func handleRoomInfoUpdate(_ roomInfo: RoomInfoProxyProtocol) async {
         state.hasSuccessor = roomInfo.successor != nil
         
         let pinnedEventIDs = roomInfo.pinnedEventIDs
@@ -348,12 +348,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
             state.isKnockableRoom = false
         }
 
-        let powerLevels = try? await roomProxy.powerLevels().get()
-        state.canSendMessage = (try? powerLevels?.canUser(userID: roomProxy.ownUserID, sendMessage: .roomMessage).get()) == true
-        state.canJoinCall = (try? powerLevels?.canUserJoinCall(userID: roomProxy.ownUserID).get()) == true
-        state.canAcceptKnocks = (try? powerLevels?.canUserInvite(userID: roomProxy.ownUserID).get()) == true
-        state.canDeclineKnocks = (try? powerLevels?.canUserKick(userID: roomProxy.ownUserID).get()) == true
-        state.canBan = (try? powerLevels?.canUserBan(userID: roomProxy.ownUserID).get()) == true
+        guard let powerLevels = roomInfo.powerLevels else { fatalError("Missing room power levels") }
+        state.canSendMessage = powerLevels.canOwnUser(sendMessage: .roomMessage)
+        state.canJoinCall = powerLevels.canOwnUserJoinCall()
+        state.canAcceptKnocks = powerLevels.canOwnUserInvite()
+        state.canDeclineKnocks = powerLevels.canOwnUserKick()
+        state.canBan = powerLevels.canOwnUserBan()
     }
     
     private func setupPinnedEventsTimelineItemProviderIfNeeded() {
@@ -425,15 +425,17 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
 }
 
 extension RoomScreenViewModel {
-    static func mock(roomProxyMock: JoinedRoomProxyMock) -> RoomScreenViewModel {
-        RoomScreenViewModel(clientProxy: ClientProxyMock(),
+    static func mock(roomProxyMock: JoinedRoomProxyMock,
+                     clientProxyMock: ClientProxyMock = ClientProxyMock(),
+                     appHooks: AppHooks = AppHooks()) -> RoomScreenViewModel {
+        RoomScreenViewModel(clientProxy: clientProxyMock,
                             roomProxy: roomProxyMock,
                             initialSelectedPinnedEventID: nil,
                             mediaProvider: MediaProviderMock(configuration: .init()),
                             ongoingCallRoomIDPublisher: .init(.init(nil)),
                             appMediator: AppMediatorMock.default,
                             appSettings: ServiceLocator.shared.settings,
-                            appHooks: AppHooks(),
+                            appHooks: appHooks,
                             analyticsService: ServiceLocator.shared.analytics,
                             userIndicatorController: ServiceLocator.shared.userIndicatorController)
     }
