@@ -10,7 +10,12 @@ import MatrixRustSDK
 import SwiftUI
 
 struct SessionVerificationScreen: View {
+    enum AccessibilityFocus {
+        case title
+    }
+    
     @ObservedObject var context: SessionVerificationScreenViewModel.Context
+    @AccessibilityFocusState private var accessibilityFocus: AccessibilityFocus?
     
     var body: some View {
         FullscreenDialog {
@@ -26,6 +31,11 @@ struct SessionVerificationScreen: View {
         .interactiveDismissDisabled()
         .navigationBarBackButtonHidden(context.viewState.verificationState == .verified)
         .toolbar { toolbar }
+        .onAppear {
+            var announcement = AttributedString(L10n.a11yTimeLimitedActionRequired)
+            announcement.accessibilitySpeechAnnouncementPriority = .high
+            AccessibilityNotification.Announcement(announcement).post()
+        }
     }
     
     // MARK: - Private
@@ -56,6 +66,10 @@ struct SessionVerificationScreen: View {
                 .foregroundColor(.compound.textPrimary)
                 .padding(.bottom, 8)
                 .accessibilityIdentifier(context.viewState.titleAccessibilityIdentifier)
+                .onChange(of: context.viewState.title) { _, _ in
+                    accessibilityFocus = .title
+                }
+                .accessibilityFocused($accessibilityFocus, equals: .title)
 
             Text(context.viewState.message)
                 .font(.compound.bodyMD)
@@ -184,10 +198,12 @@ struct SessionVerificationScreen: View {
             VStack(spacing: 16.0) {
                 Text(emoji.symbol)
                     .font(.compound.headingXLBold)
+                    .accessibilityHidden(true)
                 Text(emoji.localizedDescription.capitalized)
                     .font(.compound.bodyMD)
                     .foregroundColor(.compound.textSecondary)
             }
+            .accessibilityElement(children: .combine)
             .padding(8.0)
         }
     }

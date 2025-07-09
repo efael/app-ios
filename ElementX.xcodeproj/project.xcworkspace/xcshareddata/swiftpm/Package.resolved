@@ -1,13 +1,13 @@
 {
-  "originHash" : "cb4b4c28930e04929217c9570b7f82a1dc8e3dc51e3f956f11584dbae9bac079",
+  "originHash" : "f573b0754209479f46b77206f67033b0073bb2df38ede53b3289703615c5a48f",
   "pins" : [
     {
       "identity" : "compound-design-tokens",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-design-tokens",
       "state" : {
-        "revision" : "45818d8a7183a6838414791de50fbcea6a49100c",
-        "version" : "4.0.1"
+        "revision" : "b0addc0775526685ad96fd9ef9c04b2de4456314",
+        "version" : "5.0.1"
       }
     },
     {
@@ -15,7 +15,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/compound-ios",
       "state" : {
-        "revision" : "4aa89193ba5bfa0d83f9bbc584900e518fdb3a26"
+        "revision" : "a32db8bc30f534fd4f189c10cb99afd4abc0f6ea"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/element-call-swift",
       "state" : {
-        "revision" : "46e04acd94d139223364806063eda083f17007d0",
-        "version" : "0.12.2"
+        "revision" : "dc273bd1fbb08c41ab517574b39c23ef667718c9",
+        "version" : "0.13.1"
       }
     },
     {
@@ -158,8 +158,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/element-hq/matrix-rust-components-swift",
       "state" : {
-        "revision" : "302397835194e0bb73de876dc2ef2d3e1a7c7740",
-        "version" : "25.6.25-2"
+        "revision" : "9ca4d9e3b6fc15f1decf024a7474b368525ef52a",
+        "version" : "25.7.4"
       }
     },
     {
@@ -214,6 +214,15 @@
       "state" : {
         "revision" : "87e50f483c54e6efd60e885f7f5aa946cee68023",
         "version" : "1.2.1"
+      }
+    },
+    {
+      "identity" : "swift-async-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-async-algorithms",
+      "state" : {
+        "revision" : "042e1c4d9d19748c9c228f8d4ebc97bb1e339b0b",
+        "version" : "1.0.4"
       }
     },
     {

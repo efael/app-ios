@@ -14,7 +14,7 @@ class BugReportScreenViewModel: BugReportScreenViewModelType, BugReportScreenVie
     private let bugReportService: BugReportServiceProtocol
     private let clientProxy: ClientProxyProtocol?
     
-    private let logFiles = Tracing.logFiles
+    private let logFiles: [URL]
     
     private let actionsSubject: PassthroughSubject<BugReportScreenViewModelAction, Never> = .init()
     // periphery:ignore - when set to nil this is automatically cancelled
@@ -26,10 +26,12 @@ class BugReportScreenViewModel: BugReportScreenViewModelType, BugReportScreenVie
     
     init(bugReportService: BugReportServiceProtocol,
          clientProxy: ClientProxyProtocol?,
+         logFiles: [URL] = Tracing.logFiles,
          screenshot: UIImage?,
          isModallyPresented: Bool) {
         self.bugReportService = bugReportService
         self.clientProxy = clientProxy
+        self.logFiles = logFiles
         
         let canSendLogFiles = Self.validate(logFiles)
         let bindings = BugReportScreenViewStateBindings(reportText: "", sendingLogsEnabled: canSendLogFiles, canContact: false)
@@ -95,17 +97,16 @@ class BugReportScreenViewModel: BugReportScreenViewModelType, BugReportScreenVie
                 // Continue anyway without the screenshot.
             }
         }
-        let ed25519 = await clientProxy?.ed25519Base64()
-        let curve25519 = await clientProxy?.curve25519Base64()
-        let bugReport = BugReport(userID: clientProxy?.userID,
-                                  deviceID: clientProxy?.deviceID,
-                                  ed25519: ed25519,
-                                  curve25519: curve25519,
-                                  text: context.reportText,
-                                  logFiles: context.sendingLogsEnabled ? logFiles : nil,
-                                  canContact: context.canContact,
-                                  githubLabels: [],
-                                  files: files)
+        
+        let bugReport = await BugReport(userID: clientProxy?.userID,
+                                        deviceID: clientProxy?.deviceID,
+                                        ed25519: clientProxy?.ed25519Base64(),
+                                        curve25519: clientProxy?.curve25519Base64(),
+                                        text: context.reportText,
+                                        logFiles: context.sendingLogsEnabled ? logFiles : nil,
+                                        canContact: context.canContact,
+                                        githubLabels: [],
+                                        files: files)
         
         switch await bugReportService.submitBugReport(bugReport,
                                                       progressListener: progressSubject) {

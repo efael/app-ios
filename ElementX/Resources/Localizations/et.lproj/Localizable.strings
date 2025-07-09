@@ -1,5 +1,5 @@
 "Notification" = "Teavitus";
-"a11y_add_reaction" = "Add reaction: %1$@";
+"a11y_add_reaction" = "Reageeri: %1$@";
 "a11y_avatar" = "Tunnuspilt";
 "a11y_delete" = "Kustuta";
 "a11y_hide_password" = "Peida salasõna";
@@ -20,15 +20,20 @@
 "a11y_read_receipts_single" = "Seda luges %1$@";
 "a11y_read_receipts_tap_to_show_all" = "Vaata kõiki";
 "a11y_remove_reaction" = "Eemalda reageerimine %1$@ emotikoniga";
-"a11y_remove_reaction_with" = "Remove reaction with %1$@";
+"a11y_remove_reaction_with" = "Eemalda reageerimine: %1$@";
 "a11y_send_files" = "Saada faile";
 "a11y_show_password" = "Näita salasõna";
 "a11y_start_call" = "Helista";
 "a11y_user_menu" = "Kasutajamenüü";
+"a11y_view_avatar" = "Vaata tunnuspilti";
 "a11y_view_details" = "Vaata üksikasju";
 "a11y_voice_message" = "Häälsõnum, kestus:%1$@";
 "a11y_voice_message_record" = "Salvesta häälsõnum.";
 "a11y_voice_message_stop_recording" = "Lõpeta salvestamine";
+"a11y.other_user_avatar" = "Teise kasutaja tunnuspilt";
+"a11y.room_avatar" = "Jututoa tunnuspilt";
+"a11y.user_avatar" = "Kasutaja tunnuspilt";
+"a11y.your_avatar" = "Sinu tunnuspilt";
 "action_accept" = "Nõustu";
 "action_add_caption" = "Lisa selgitus";
 "action_add_to_timeline" = "Lisa ajajoonele";
@@ -131,6 +136,10 @@
 "action_view_source" = "Vaata lähtekoodi";
 "action_yes" = "Jah";
 "action_yes_try_again" = "Jah, proovi uuesti";
+"action.open_context_menu" = "Ava kontekstimenüü";
+"action.send_edited_message" = "Saada muudetud sõnum";
+"action.send_voice_message" = "Saada häälsõnum";
+"action.view" = "Vaata";
 "banner_migrate_to_native_sliding_sync_action" = "Logi välja ja uuenda";
 "banner_migrate_to_native_sliding_sync_app_force_logout_title" = "%1$@ enam ei toeta vana protokolli. Kui soovid rakendust edasi kasutada, siis logi korraks temast välja ning seejärel tagasi.";
 "banner_migrate_to_native_sliding_sync_description" = "Sinu koduserver toetab uut ja kiiremat protokolli. Uuendamiseks logi korraks rakendusest välja ja siis tagasi. Mingil hetkel tulevikus vana protokoll eemaldatakse kasutusest ja tehes uuenduse nüüd, väldid hilisemat sundkorras uuendust.";
@@ -325,7 +334,7 @@
 "emoji_picker_category_people" = "Emotikonid ja inimesed";
 "emoji_picker_category_places" = "Reisimine ja kohad";
 "emoji_picker_category_symbols" = "Sümbolid";
-"error_invalid_invite" = "The room no longer exists or the invite is no longer valid.";
+"error_invalid_invite" = "Seda jututuba pole enam olemas või pole see kutse enam kehtiv.";
 "error_network_or_server_issue" = "See võib olla põhjustatud võrgu- või serverivigadest.";
 "error_room_address_already_exists" = "Selline jututoa aadress on juba olemas. Palun proovi muuta kas aadressi või jututoa nime";
 "error_room_address_invalid_symbols" = "Mõned tähemärgid pole lubatud. Kasuta vaid tähti, numbreid ja neid kirjavahemärke ! $ & ‘ ( ) * + / ; = ? @ [ ] - . _";
@@ -360,7 +369,7 @@
 "notification_channel_noisy" = "Lärmakad teavitused";
 "notification_channel_ringing_calls" = "Kõnehelinad";
 "notification_channel_silent" = "Vaiksed teavitused";
-"notification_fallback_content" = "You have new messages.";
+"notification_fallback_content" = "Sulle on uusi sõnumeid.";
 "notification_incoming_call" = "📹 Sissetulev kõne";
 "notification_inline_reply_failed" = "** Saatmine ei õnnestunud - palun ava jututoa täisvaade";
 "notification_invite_body" = "Kutse osalema vestluses";
@@ -381,7 +390,7 @@
 "preference_rageshake" = "Veast teatamiseks raputa nutiseadet ägedalt";
 "rageshake_detection_dialog_content" = "Tundub, et sa raputad oma nutiseadet ägedalt. Kas sa soovid saata meile veateadet?";
 "rich_text_editor_bullet_list" = "Lülita mummudega loend sisse/välja";
-"rich_text_editor_close_formatting_options" = "Sulge vorminduse valikud";
+"rich_text_editor_close_formatting_options" = "Katkesta ja sulge tekstivorminduse valikud";
 "rich_text_editor_code_block" = "Lülita lähtekoodi lõik sisse/välja";
 "rich_text_editor_composer_encrypted_placeholder" = "Krüptitud sõnum…";
 "rich_text_editor_composer_placeholder" = "Sõnum…";
@@ -538,7 +547,8 @@
 "screen_room_timeline_tombstoned_room_message" = "See jututuba on asendatud uuega ning pole enam aktiivne";
 "screen_room_timeline_upgraded_room_action" = "Vaata vanu sõnumeid";
 "screen_room_timeline_upgraded_room_message" = "See jututuba on varasema jututoa jätk";
-"screen_room_timeline_reactions_show_reactions_summary" = "Show reactions summary";
+"screen_room_timeline_reactions_show_reactions_summary" = "Näita reageerimiste kokkuvõtet";
+"screen_roomlist_clear_filters" = "Tühjenda filtrid";
 "screen_roomlist_tombstoned_room_description" = "See jututuba on uuendatud";
 "screen_security_and_privacy_add_room_address_action" = "Lisa jututoa aadress";
 "screen_security_and_privacy_ask_to_join_option_description" = "Kõik võivad paluda jututoaga liitumist, kuid peakasutaja või moderaator peavad sellega nõustuma.";
@@ -632,6 +642,7 @@
 "screen_bug_report_error_description_too_short" = "Kirjeldus on liiga lühike. Palun jaga täpsemat teavet selle kohta, mis juhtus. Tänud juba ette!";
 "screen_bug_report_include_crash_logs" = "Saada krahhilogid";
 "screen_bug_report_include_logs" = "Luba logide saatmine";
+"screen_bug_report_include_logs_error" = "Sinu logid on väga mahukad ja neid ei saa siia lisada. Palun saada logid meile mõnel muul viisil.";
 "screen_bug_report_include_screenshot" = "Saada ekraanitõmmis";
 "screen_bug_report_logs_description" = "Tõhusama veaotsingu nimel lisame sinu veateatele logid. Kui sa seda ei soovi, siis lülita antud valik välja.";
 "screen_bug_report_view_logs" = "Vaata logisid";
@@ -792,6 +803,7 @@
 "screen_notification_settings_system_notifications_action_required_content_link" = "süsteemi seadistusi";
 "screen_notification_settings_system_notifications_turned_off" = "Süsteemi teavitused on välja lülitatud";
 "screen_notification_settings_title" = "Teavitused";
+"screen_onboarding_app_version" = "Versioon %1$@";
 "screen_onboarding_sign_in_manually" = "Logi sisse käsitsi";
 "screen_onboarding_sign_in_to" = "Logi sisse teenusesse %1$@";
 "screen_onboarding_sign_in_with_qr_code" = "Logi sisse QR-koodi alusel";
