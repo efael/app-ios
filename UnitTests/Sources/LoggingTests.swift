@@ -10,19 +10,27 @@
 import XCTest
 
 class LoggingTests: XCTestCase {
+    static var targetConfiguration: Target.ConfigurationResult?
+    
     private enum Constants {
         static let genericFailure = "Test failed"
     }
 
     override func setUpWithError() throws {
-        Tracing.deleteLogFiles()
+        Tracing.deleteLogFiles(in: Tracing.logsDirectory)
     }
     
     func testLogging() async throws {
         let target = "tests"
         XCTAssertTrue(Tracing.logFiles.isEmpty)
         
-        await Target.tests.configure(logLevel: .info, traceLogPacks: [], sentryURL: nil)
+        if Self.targetConfiguration == nil {
+            Self.targetConfiguration = Target.tests.configure(logLevel: .info,
+                                                              traceLogPacks: [],
+                                                              sentryURL: nil,
+                                                              rageshakeURL: ServiceLocator.shared.settings.bugReportRageshakeURL,
+                                                              appHooks: AppHooks())
+        }
         
         // There is something weird with Rust logging where the file writing handle doesn't
         // notice that the file it is writing to was deleted, so we can't run these checks
@@ -175,7 +183,13 @@ class LoggingTests: XCTestCase {
                                                               contentType: nil))
         
         // When logging that value
-        await Target.tests.configure(logLevel: .info, traceLogPacks: [], sentryURL: nil)
+        if Self.targetConfiguration == nil {
+            Self.targetConfiguration = Target.tests.configure(logLevel: .info,
+                                                              traceLogPacks: [],
+                                                              sentryURL: nil,
+                                                              rageshakeURL: ServiceLocator.shared.settings.bugReportRageshakeURL,
+                                                              appHooks: AppHooks())
+        }
         
         MXLog.info(textMessage)
         MXLog.info(noticeMessage)

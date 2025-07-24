@@ -34,6 +34,7 @@ enum ClientProxyError: Error {
     
     case invalidMedia
     case invalidServerName
+    case invalidResponse
     case failedUploadingMedia(ErrorKind)
     case roomPreviewIsPrivate
     case failedRetrievingUserIdentity
@@ -170,7 +171,7 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     func roomSummaryForAlias(_ alias: String) -> RoomSummary?
     
     /// Will only work for rooms that are in our room list/local store
-    func reportRoomForIdentifier(_ identifier: String, reason: String?) async -> Result<Void, ClientProxyError>
+    func reportRoomForIdentifier(_ identifier: String, reason: String) async -> Result<Void, ClientProxyError>
     
     @discardableResult func loadUserDisplayName() async -> Result<Void, ClientProxyError>
     
