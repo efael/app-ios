@@ -84,7 +84,8 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
     // MARK: - Members
     
     private func updateMembers(_ members: [RoomMemberProxyProtocol]) {
-        state.administratorCount = members.filter { $0.role == .administrator && $0.isActive }.count
+        // TODO: Will probably be changed when we implement the owners list
+        state.administratorCount = members.filter { $0.role.isAdminOrHigher && $0.isActive }.count
         state.moderatorCount = members.filter { $0.role == .moderator && $0.isActive }.count
     }
     
@@ -95,7 +96,7 @@ class RoomRolesAndPermissionsScreenViewModel: RoomRolesAndPermissionsScreenViewM
         // Note: Ignore the first value as the publisher is backed by a current value subject.
         let infoTask = Task { await roomProxy.infoPublisher.dropFirst().values.first { _ in true } }
         
-        switch await roomProxy.updatePowerLevelsForUsers([(userID: roomProxy.ownUserID, powerLevel: role.rustPowerLevel)]) {
+        switch await roomProxy.updatePowerLevelsForUsers([(userID: roomProxy.ownUserID, powerLevel: role.powerLevelValue)]) {
         case .success:
             _ = await infoTask.value
             await roomProxy.updateMembers()

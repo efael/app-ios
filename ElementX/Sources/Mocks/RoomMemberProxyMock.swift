@@ -16,7 +16,7 @@ struct RoomMemberProxyMockConfiguration {
     var membership: MembershipState
     var isIgnored = false
     
-    var powerLevel = 0
+    var powerLevel = RoomPowerLevel(value: 0)
     var role = RoomMemberRole.user
 }
 
@@ -52,7 +52,7 @@ extension RoomMemberProxyMock {
                                         displayName: "Me",
                                         avatarURL: .mockMXCUserAvatar,
                                         membership: .join,
-                                        powerLevel: 100,
+                                        powerLevel: .init(value: 100),
                                         role: .administrator))
     }
     
@@ -116,7 +116,23 @@ extension RoomMemberProxyMock {
         RoomMemberProxyMock(with: .init(userID: "@admin:matrix.org",
                                         displayName: "Arthur",
                                         membership: .join,
-                                        powerLevel: 100,
+                                        powerLevel: .init(value: 100),
+                                        role: .administrator))
+    }
+    
+    static var mockCreator: RoomMemberProxyMock {
+        RoomMemberProxyMock(with: .init(userID: "@creator:matrix.org",
+                                        displayName: "God",
+                                        membership: .join,
+                                        powerLevel: .infinite,
+                                        role: .creator))
+    }
+    
+    static var mockOwner: RoomMemberProxyMock {
+        RoomMemberProxyMock(with: .init(userID: "@owner:matrix.org",
+                                        displayName: "Guinevere",
+                                        membership: .join,
+                                        powerLevel: .value(150),
                                         role: .administrator))
     }
     
@@ -124,7 +140,7 @@ extension RoomMemberProxyMock {
         RoomMemberProxyMock(with: .init(userID: "@mod:matrix.org",
                                         displayName: "Merlin",
                                         membership: .join,
-                                        powerLevel: 50,
+                                        powerLevel: .init(value: 50),
                                         role: .moderator))
     }
     
