@@ -2,11 +2,6 @@ require 'yaml'
 
 skip_docs
 
-enterprise = '../Enterprise/Pipeline/Scripts/iOS/Fastfile'
-if File.exist?(enterprise)
-  import enterprise
-end
-
 before_all do
   xcversion(version: "16.4")
 
