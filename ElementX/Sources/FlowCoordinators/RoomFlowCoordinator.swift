@@ -129,6 +129,7 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         fatalError("This flow coordinator expect a route")
     }
     
+    // swiftlint:disable:next cyclomatic_complexity
     func handleAppRoute(_ appRoute: AppRoute, animated: Bool) {
         guard stateMachine.state != .complete else {
             fatalError("This flow coordinator is `finished` ☠️")
@@ -524,7 +525,6 @@ class RoomFlowCoordinator: FlowCoordinatorProtocol {
         roomScreenCoordinator = coordinator
         
         if !isChildFlow {
-            let animated = UIDevice.current.userInterfaceIdiom == .phone ? animated : false
             navigationStackCoordinator.setRootCoordinator(coordinator, animated: animated) { [weak self] in
                 self?.stateMachine.tryEvent(.dismissFlow)
             }
