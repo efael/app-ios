@@ -160,7 +160,7 @@ final class AppSettings {
     ///
     /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
     /// match the last part of the user ID. For example `example.com` and not `https://matrix.example.com`.
-    private(set) var accountProviders = ["efael.uz"]
+  private(set) var accountProviders = ["uzberk.uz", "uchar.uz"]
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
     private(set) var allowOtherAccountProviders = false
   
@@ -187,7 +187,7 @@ final class AppSettings {
     /// A URL where users can go read more about identity pinning violations
     private(set) var identityPinningViolationDetailsURL: URL = "https://efael.net/help#encryption18"
     /// Any domains that Element web may be hosted on - used for handling links.
-    private(set) var elementWebHosts = ["chat.efael.net"]
+    private(set) var elementWebHosts = ["chat.uzberk.uz", "chat.uchar.uz"]
     /// The domain that account provisioning links will be hosted on - used for handling the links.
     private(set) var accountProvisioningHost = "auth.efael.net"
     /// The App Store URL for Element Pro, shown to the user when a homeserver requires that app.
