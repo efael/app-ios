@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 //
 
-#if canImport(EmbeddedElementCall)
+#if IS_MAIN_APP
 import EmbeddedElementCall
 #endif
 
@@ -22,7 +22,6 @@ protocol CommonSettingsProtocol {
     var enableKeyShareOnInvite: Bool { get }
     var threadsEnabled: Bool { get }
     var hideQuietNotificationAlerts: Bool { get }
-    var multipleAttachmentUploadEnabled: Bool { get }
 }
 
 /// Store Element specific app settings.
@@ -55,13 +54,13 @@ final class AppSettings {
         // Feature flags
         case publicSearchEnabled
         case fuzzyRoomListSearchEnabled
+        case lowPriorityFilterEnabled
         case enableOnlySignedDeviceIsolationMode
         case enableKeyShareOnInvite
         case knockingEnabled
         case threadsEnabled
+        case spacesEnabled
         case developerOptionsEnabled
-        case sharePosEnabledV2
-        case multipleAttachmentUploadEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -82,8 +81,6 @@ final class AppSettings {
         return apps.contains(InfoPlistReader.main.baseBundleIdentifier)
         #endif
     }()
-    
-    #if IS_MAIN_APP
         
     static func resetAllSettings() {
         MXLog.warning("Resetting the AppSettings.")
@@ -218,13 +215,13 @@ final class AppSettings {
     /// The redirect URL used for OIDC. This no longer uses universal links so we don't need the bundle ID to avoid conflicts between Element X, Nightly and PR builds.
     private(set) var oidcRedirectURL: URL = "https://element.io/oidc/login"
     
-    private(set) lazy var oidcConfiguration = OIDCConfigurationProxy(clientName: InfoPlistReader.main.bundleDisplayName,
-                                                                     redirectURI: oidcRedirectURL,
-                                                                     clientURI: websiteURL,
-                                                                     logoURI: logoURL,
-                                                                     tosURI: acceptableUseURL,
-                                                                     policyURI: privacyURL,
-                                                                     staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
+    private(set) lazy var oidcConfiguration = OIDCConfiguration(clientName: InfoPlistReader.main.bundleDisplayName,
+                                                                redirectURI: oidcRedirectURL,
+                                                                clientURI: websiteURL,
+                                                                logoURI: logoURL,
+                                                                tosURI: acceptableUseURL,
+                                                                policyURI: privacyURL,
+                                                                staticRegistrations: oidcStaticRegistrations.mapKeys { $0.absoluteString })
     
     /// Whether or not the Create Account button is shown on the start screen.
     ///
@@ -249,13 +246,25 @@ final class AppSettings {
 
     @UserPreference(key: UserDefaultsKeys.enableInAppNotifications, defaultValue: true, storageType: .userDefaults(store))
     var enableInAppNotifications
+    
+    @UserPreference(key: UserDefaultsKeys.hideQuietNotificationAlerts, defaultValue: false, storageType: .userDefaults(store))
+    var hideQuietNotificationAlerts
 
     /// Tag describing which set of device specific rules a pusher executes.
     @UserPreference(key: UserDefaultsKeys.pusherProfileTag, storageType: .userDefaults(store))
     var pusherProfileTag: String?
+    
+    // MARK: - Logging
         
+    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: LogLevel.info, storageType: .userDefaults(store))
+    var logLevel
+    
+    @UserPreference(key: UserDefaultsKeys.traceLogPacks, defaultValue: [], storageType: .userDefaults(store))
+    var traceLogPacks: Set<TraceLogPack>
+    
     // MARK: - Bug report
     
+    let bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> = .init(Secrets.rageshakeURL.map { .url(URL(string: $0)!) } ?? .disabled) // swiftlint:disable:this force_unwrapping
     let bugReportSentryURL: URL? = Secrets.sentryDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     let bugReportSentryRustURL: URL? = Secrets.sentryRustDSN.map { URL(string: $0)! } // swiftlint:disable:this force_unwrapping
     /// The name allocated by the bug report server
@@ -309,8 +318,10 @@ final class AppSettings {
 
     // MARK: - Element Call
     
+    #if IS_MAIN_APP
     // swiftlint:disable:next force_unwrapping
     let elementCallBaseURL: URL = EmbeddedElementCall.appURL!
+    #endif
     
     // These are publicly availble on https://call.element.io so we don't neeed to treat them as secrets
     let elementCallPosthogAPIHost = "https://posthog-element-call.element.io"
@@ -346,26 +357,8 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.fuzzyRoomListSearchEnabled, defaultValue: false, storageType: .userDefaults(store))
     var fuzzyRoomListSearchEnabled
     
-    @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var knockingEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
-    var developerOptionsEnabled
-    
-    @UserPreference(key: UserDefaultsKeys.sharePosEnabledV2, defaultValue: true, storageType: .userDefaults(store))
-    var sharePosEnabled
-    
-    #endif
-    
-    // MARK: - Shared
-        
-    @UserPreference(key: UserDefaultsKeys.logLevel, defaultValue: LogLevel.info, storageType: .userDefaults(store))
-    var logLevel
-    
-    @UserPreference(key: UserDefaultsKeys.traceLogPacks, defaultValue: [], storageType: .userDefaults(store))
-    var traceLogPacks: Set<TraceLogPack>
-    
-    let bugReportRageshakeURL: RemotePreference<RageshakeConfiguration> = .init(Secrets.rageshakeURL.map { .url(URL(string: $0)!) } ?? .disabled) // swiftlint:disable:this force_unwrapping
+    @UserPreference(key: UserDefaultsKeys.lowPriorityFilterEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var lowPriorityFilterEnabled
     
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
     @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
@@ -374,15 +367,18 @@ final class AppSettings {
     /// Configuration to enable encrypted history sharing on invite, and accepting keys from inviters.
     @UserPreference(key: UserDefaultsKeys.enableKeyShareOnInvite, defaultValue: false, storageType: .userDefaults(store))
     var enableKeyShareOnInvite
-
+    
+    @UserPreference(key: UserDefaultsKeys.knockingEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var knockingEnabled
+    
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.hideQuietNotificationAlerts, defaultValue: false, storageType: .userDefaults(store))
-    var hideQuietNotificationAlerts
+    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var spacesEnabled
     
-    @UserPreference(key: UserDefaultsKeys.multipleAttachmentUploadEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
-    var multipleAttachmentUploadEnabled
+    @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
+    var developerOptionsEnabled
 }
 
 extension AppSettings: CommonSettingsProtocol { }

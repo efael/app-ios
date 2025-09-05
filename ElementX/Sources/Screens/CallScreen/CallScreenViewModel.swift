@@ -112,17 +112,6 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
             .store(in: &cancellables)
         
         setupCall()
-        
-        timeoutTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(10))
-            guard !Task.isCancelled, let self else { return }
-            MXLog.error("Failed to join Element Call: Timeout")
-            state.bindings.alertInfo = .init(id: UUID(),
-                                             title: L10n.commonError,
-                                             message: L10n.errorUnknown,
-                                             primaryButton: .init(title: L10n.actionDismiss) { [weak self] in self?.actionsSubject.send(.dismiss) })
-            timeoutTask = nil
-        }
     }
     
     override func process(viewAction: CallScreenViewAction) {
@@ -218,6 +207,17 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
                 await elementCallService.setupCallSession(roomID: roomProxy.id,
                                                           roomDisplayName: roomProxy.infoPublisher.value.displayName ?? roomProxy.id)
             }
+            
+            timeoutTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(10))
+                guard !Task.isCancelled, let self else { return }
+                MXLog.error("Failed to join Element Call: Timeout")
+                state.bindings.alertInfo = .init(id: UUID(),
+                                                 title: L10n.commonError,
+                                                 message: L10n.errorUnknown,
+                                                 primaryButton: .init(title: L10n.actionDismiss) { [weak self] in self?.actionsSubject.send(.dismiss) })
+                timeoutTask = nil
+            }
         }
     }
     
@@ -226,7 +226,7 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
     
     private func handleOutputDeviceSelected(deviceID: String) {
         let isEarpiece = deviceID == Self.earpieceID
-        MXLog.info("[handleOutputDeviceSelected] is earpiece: \(isEarpiece)")
+        MXLog.info("Is earpiece: \(isEarpiece)")
         UIDevice.current.isProximityMonitoringEnabled = isEarpiece
     }
     

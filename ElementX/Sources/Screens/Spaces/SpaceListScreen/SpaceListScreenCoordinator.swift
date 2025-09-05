@@ -12,9 +12,12 @@ import SwiftUI
 
 struct SpaceListScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
+    let selectedSpacePublisher: CurrentValuePublisher<String?, Never>
+    let userIndicatorController: UserIndicatorControllerProtocol
 }
 
 enum SpaceListScreenCoordinatorAction {
+    case selectSpace(SpaceRoomListProxyProtocol)
     case showSettings
 }
 
@@ -32,7 +35,9 @@ final class SpaceListScreenCoordinator: CoordinatorProtocol {
     init(parameters: SpaceListScreenCoordinatorParameters) {
         self.parameters = parameters
         
-        viewModel = SpaceListScreenViewModel(userSession: parameters.userSession)
+        viewModel = SpaceListScreenViewModel(userSession: parameters.userSession,
+                                             selectedSpacePublisher: parameters.selectedSpacePublisher,
+                                             userIndicatorController: parameters.userIndicatorController)
     }
     
     func start() {
@@ -41,6 +46,8 @@ final class SpaceListScreenCoordinator: CoordinatorProtocol {
             
             guard let self else { return }
             switch action {
+            case .selectSpace(let spaceRoomListProxy):
+                actionsSubject.send(.selectSpace(spaceRoomListProxy))
             case .showSettings:
                 actionsSubject.send(.showSettings)
             }

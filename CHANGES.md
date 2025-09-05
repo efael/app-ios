@@ -1,3 +1,78 @@
+## Changes in 25.09.0 (2025-08-27)
+
+### What's Changed
+
+✨ Features
+* Fix document picker tint colors, remove multi-selection feature flag by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4424
+
+🙌 Improvements
+* Make the room list filters smaller. by @amshakal in https://github.com/element-hq/element-x-ios/pull/4432
+* Improve global proxy detection, building and logging. by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4440
+
+🐛 Bugfixes
+* Only use the Element Call timeoutTask for room calls. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4417
+* Configure the video camera picker to record in high quality by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4423
+* Improve supported share types by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4428
+* Preserve the user chosen order when uploading multiple media files by @stefanceriu in https://github.com/element-hq/element-x-ios/pull/4436
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4422
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4438
+
+🧱 Build
+* Bump the calendar version ready for the next release by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4441
+
+🚧 In development 🚧
+* Add a Low Priority room filter behind a feature flag. by @Copilot in https://github.com/element-hq/element-x-ios/pull/4394
+* Add a feature flag for spaces. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4429
+* Space flow improvements. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4430
+
+Others
+* Update the SDK, handle API breaks. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4418
+* Add a couple of logs to debug badge counts. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4425
+* Remove unnecessary awaits on RoomFlowCoordinator.init. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4434
+* Tidy up some logs that have a prefix. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4443
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4445
+* Update Element Call to 0.15.0. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4446
+
+### New Contributors
+* @amshakal made their first contribution in https://github.com/element-hq/element-x-ios/pull/4432
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.5...release/25.09.0
+
+## Changes in 25.08.5 (2025-08-15)
+
+### What's Changed
+
+🐛 Bugfixes
+* Fix a bug when a compact split view doesn't react to a change of root coordinator in the sidebar. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4393
+* Add a workaround to include some via parameters for room v12 tombstone links. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4413
+* Fix a bug where the image upload screen was unintentionally dismissed for some failures. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4414
+* Fix some app route navigation bugs. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4415
+
+🗣 Translations
+* Translations update by @RiotRobot in https://github.com/element-hq/element-x-ios/pull/4398
+
+🚧 In development 🚧
+* Add a SpaceExplorerFlowCoordinator. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4383
+* Move the Settings flow from the Chats flow up one level to the UserSession flow. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4390
+* Add `SpaceRoomCell` & `Space…ProxyProtocols` and use them on the `SpaceListScreen`. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4404
+* Add a SpaceScreen for listing rooms and subspaces within a space. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4412
+
+Others
+* Label rageshakes from macOS and report the right operating system. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4392
+* Remove unreachable guard condition in String.asciified() by @Copilot in https://github.com/element-hq/element-x-ios/pull/4395
+* Update dependency jpsim/Yams to from: "6.1.0" by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4397
+* Update Roles & Permissions UI test snapshots. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4399
+* Update actions/checkout action to v5 by @renovate[bot] in https://github.com/element-hq/element-x-ios/pull/4401
+* Update the SDK. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4405
+* Remove the share_pos developer option. by @pixlwave in https://github.com/element-hq/element-x-ios/pull/4406
+
+### New Contributors
+* @Copilot made their first contribution in https://github.com/element-hq/element-x-ios/pull/4395
+
+**Full Changelog**: https://github.com/element-hq/element-x-ios/compare/release/25.08.3...release/25.08.5
+
 ## Changes in 25.08.4 (2025-08-12)
 
 ### What's Changed

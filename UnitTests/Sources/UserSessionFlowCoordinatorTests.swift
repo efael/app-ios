@@ -35,19 +35,23 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
         
         notificationManager = NotificationManagerMock()
         
-        userSessionFlowCoordinator = UserSessionFlowCoordinator(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
-                                                                isNewLogin: false,
+        let flowParameters = CommonFlowParameters(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
+                                                  bugReportService: BugReportServiceMock(.init()),
+                                                  elementCallService: ElementCallServiceMock(.init()),
+                                                  timelineControllerFactory: timelineControllerFactory,
+                                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                  appMediator: AppMediatorMock.default,
+                                                  appSettings: ServiceLocator.shared.settings,
+                                                  appHooks: AppHooks(),
+                                                  analytics: ServiceLocator.shared.analytics,
+                                                  userIndicatorController: UserIndicatorControllerMock(),
+                                                  notificationManager: notificationManager,
+                                                  stateMachineFactory: stateMachineFactory)
+        
+        userSessionFlowCoordinator = UserSessionFlowCoordinator(isNewLogin: false,
                                                                 navigationRootCoordinator: rootCoordinator,
                                                                 appLockService: AppLockServiceMock(),
-                                                                bugReportService: BugReportServiceMock(.init()),
-                                                                elementCallService: ElementCallServiceMock(.init()),
-                                                                timelineControllerFactory: timelineControllerFactory,
-                                                                appMediator: AppMediatorMock.default,
-                                                                appSettings: ServiceLocator.shared.settings,
-                                                                appHooks: AppHooks(),
-                                                                analytics: ServiceLocator.shared.analytics,
-                                                                notificationManager: notificationManager,
-                                                                stateMachineFactory: stateMachineFactory)
+                                                                flowParameters: flowParameters)
         
         userSessionFlowCoordinator.start()
     }
@@ -66,6 +70,32 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
         try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNotNil(detailCoordinator)
+    }
+    
+    func testRoomPresentationClearsSettings() async throws {
+        try await process(route: .settings, expectedUserSessionState: .settingsScreen)
+        XCTAssertTrue((tabCoordinator?.sheetCoordinator as? NavigationStackCoordinator)?.rootCoordinator is SettingsScreenCoordinator)
+        XCTAssertNil(detailCoordinator)
+        
+        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        XCTAssertNil((tabCoordinator?.sheetCoordinator))
+        XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertNotNil(detailCoordinator)
+    }
+    
+    func testChildRoomPresentation() async throws {
+        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        let detailNavigationStack = try XCTUnwrap(detailNavigationStack, "There must be a navigation stack.")
+        XCTAssertTrue(detailNavigationStack.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertNotNil(detailCoordinator)
+        
+        let deferred = deferFulfillment(detailNavigationStack.observe(\.stackCoordinators.count)) { $0 == 1 }
+        try await process(route: .childRoom(roomID: "2", via: []))
+        try await deferred.fulfill()
+        XCTAssertTrue(detailNavigationStack.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertNotNil(detailCoordinator)
+        XCTAssertEqual(detailNavigationStack.stackCoordinators.count, 1)
+        XCTAssertTrue(detailNavigationStack.stackCoordinators.first is RoomScreenCoordinator)
     }
     
     func testShareMediaRouteWithoutRoom() async throws {
