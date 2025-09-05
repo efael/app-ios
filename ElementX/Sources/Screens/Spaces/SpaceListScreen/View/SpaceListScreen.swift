@@ -15,6 +15,7 @@ struct SpaceListScreen: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 header
+                spaces
             }
         }
         .navigationTitle(L10n.screenSpaceListTitle)
@@ -56,6 +57,16 @@ struct SpaceListScreen: View {
         }
     }
     
+    var spaces: some View {
+        ForEach(context.viewState.joinedSpaces, id: \.id) { spaceRoom in
+            SpaceRoomCell(spaceRoomProxy: spaceRoom,
+                          isSelected: spaceRoom.id == context.viewState.selectedSpaceID,
+                          mediaProvider: context.mediaProvider) { action in
+                context.send(viewAction: .spaceAction(action))
+            }
+        }
+    }
+    
     @ToolbarContentBuilder
     var toolbar: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
@@ -65,7 +76,7 @@ struct SpaceListScreen: View {
                 LoadableAvatarImage(url: context.viewState.userAvatarURL,
                                     name: context.viewState.userDisplayName,
                                     contentID: context.viewState.userID,
-                                    avatarSize: .user(on: .home),
+                                    avatarSize: .user(on: .spaces),
                                     mediaProvider: context.mediaProvider)
                     .accessibilityIdentifier(A11yIdentifiers.homeScreen.userAvatar)
                     .compositingGroup()
@@ -91,10 +102,13 @@ struct SpaceListScreen_Previews: PreviewProvider, TestablePreview {
         }
     }
     
-    static func makeViewModel(counterValue: Int = 0) -> SpaceListScreenViewModel {
+    static func makeViewModel() -> SpaceListScreenViewModel {
         let clientProxy = ClientProxyMock(.init())
-        let userSession = UserSessionMock(.init(clientProxy: clientProxy))
-        let viewModel = SpaceListScreenViewModel(userSession: userSession)
+        clientProxy.spaceService = SpaceServiceProxyMock(.init(joinedSpaces: .mockJoinedSpaces))
+        
+        let viewModel = SpaceListScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
+                                                 selectedSpacePublisher: .init(nil),
+                                                 userIndicatorController: UserIndicatorControllerMock())
         
         return viewModel
     }

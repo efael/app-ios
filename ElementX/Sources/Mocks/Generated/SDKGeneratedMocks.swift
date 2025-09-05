@@ -3972,6 +3972,75 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
         }
     }
 
+    //MARK: - serverVendorInfo
+
+    open var serverVendorInfoThrowableError: Error?
+    var serverVendorInfoUnderlyingCallsCount = 0
+    open var serverVendorInfoCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return serverVendorInfoUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = serverVendorInfoUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                serverVendorInfoUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    serverVendorInfoUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var serverVendorInfoCalled: Bool {
+        return serverVendorInfoCallsCount > 0
+    }
+
+    var serverVendorInfoUnderlyingReturnValue: ServerVendorInfo!
+    open var serverVendorInfoReturnValue: ServerVendorInfo! {
+        get {
+            if Thread.isMainThread {
+                return serverVendorInfoUnderlyingReturnValue
+            } else {
+                var returnValue: ServerVendorInfo? = nil
+                DispatchQueue.main.sync {
+                    returnValue = serverVendorInfoUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                serverVendorInfoUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    serverVendorInfoUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var serverVendorInfoClosure: (() async throws -> ServerVendorInfo)?
+
+    open override func serverVendorInfo() async throws -> ServerVendorInfo {
+        if let error = serverVendorInfoThrowableError {
+            throw error
+        }
+        serverVendorInfoCallsCount += 1
+        if let serverVendorInfoClosure = serverVendorInfoClosure {
+            return try await serverVendorInfoClosure()
+        } else {
+            return serverVendorInfoReturnValue
+        }
+    }
+
     //MARK: - session
 
     open var sessionThrowableError: Error?
@@ -4500,6 +4569,71 @@ open class ClientSDKMock: MatrixRustSDK.Client, @unchecked Sendable {
             return slidingSyncVersionClosure()
         } else {
             return slidingSyncVersionReturnValue
+        }
+    }
+
+    //MARK: - spaceService
+
+    var spaceServiceUnderlyingCallsCount = 0
+    open var spaceServiceCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return spaceServiceUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = spaceServiceUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                spaceServiceUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    spaceServiceUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var spaceServiceCalled: Bool {
+        return spaceServiceCallsCount > 0
+    }
+
+    var spaceServiceUnderlyingReturnValue: SpaceService!
+    open var spaceServiceReturnValue: SpaceService! {
+        get {
+            if Thread.isMainThread {
+                return spaceServiceUnderlyingReturnValue
+            } else {
+                var returnValue: SpaceService? = nil
+                DispatchQueue.main.sync {
+                    returnValue = spaceServiceUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                spaceServiceUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    spaceServiceUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var spaceServiceClosure: (() -> SpaceService)?
+
+    open override func spaceService() -> SpaceService {
+        spaceServiceCallsCount += 1
+        if let spaceServiceClosure = spaceServiceClosure {
+            return spaceServiceClosure()
+        } else {
+            return spaceServiceReturnValue
         }
     }
 
@@ -7188,15 +7322,15 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
 
     //MARK: - threadsEnabled
 
-    var threadsEnabledEnabledUnderlyingCallsCount = 0
-    open var threadsEnabledEnabledCallsCount: Int {
+    var threadsEnabledEnabledThreadSubscriptionsUnderlyingCallsCount = 0
+    open var threadsEnabledEnabledThreadSubscriptionsCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return threadsEnabledEnabledUnderlyingCallsCount
+                return threadsEnabledEnabledThreadSubscriptionsUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = threadsEnabledEnabledUnderlyingCallsCount
+                    returnValue = threadsEnabledEnabledThreadSubscriptionsUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -7204,29 +7338,29 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
         }
         set {
             if Thread.isMainThread {
-                threadsEnabledEnabledUnderlyingCallsCount = newValue
+                threadsEnabledEnabledThreadSubscriptionsUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    threadsEnabledEnabledUnderlyingCallsCount = newValue
+                    threadsEnabledEnabledThreadSubscriptionsUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var threadsEnabledEnabledCalled: Bool {
-        return threadsEnabledEnabledCallsCount > 0
+    open var threadsEnabledEnabledThreadSubscriptionsCalled: Bool {
+        return threadsEnabledEnabledThreadSubscriptionsCallsCount > 0
     }
-    open var threadsEnabledEnabledReceivedEnabled: Bool?
-    open var threadsEnabledEnabledReceivedInvocations: [Bool] = []
+    open var threadsEnabledEnabledThreadSubscriptionsReceivedArguments: (enabled: Bool, threadSubscriptions: Bool)?
+    open var threadsEnabledEnabledThreadSubscriptionsReceivedInvocations: [(enabled: Bool, threadSubscriptions: Bool)] = []
 
-    var threadsEnabledEnabledUnderlyingReturnValue: ClientBuilder!
-    open var threadsEnabledEnabledReturnValue: ClientBuilder! {
+    var threadsEnabledEnabledThreadSubscriptionsUnderlyingReturnValue: ClientBuilder!
+    open var threadsEnabledEnabledThreadSubscriptionsReturnValue: ClientBuilder! {
         get {
             if Thread.isMainThread {
-                return threadsEnabledEnabledUnderlyingReturnValue
+                return threadsEnabledEnabledThreadSubscriptionsUnderlyingReturnValue
             } else {
                 var returnValue: ClientBuilder? = nil
                 DispatchQueue.main.sync {
-                    returnValue = threadsEnabledEnabledUnderlyingReturnValue
+                    returnValue = threadsEnabledEnabledThreadSubscriptionsUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -7234,26 +7368,26 @@ open class ClientBuilderSDKMock: MatrixRustSDK.ClientBuilder, @unchecked Sendabl
         }
         set {
             if Thread.isMainThread {
-                threadsEnabledEnabledUnderlyingReturnValue = newValue
+                threadsEnabledEnabledThreadSubscriptionsUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    threadsEnabledEnabledUnderlyingReturnValue = newValue
+                    threadsEnabledEnabledThreadSubscriptionsUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var threadsEnabledEnabledClosure: ((Bool) -> ClientBuilder)?
+    open var threadsEnabledEnabledThreadSubscriptionsClosure: ((Bool, Bool) -> ClientBuilder)?
 
-    open override func threadsEnabled(enabled: Bool) -> ClientBuilder {
-        threadsEnabledEnabledCallsCount += 1
-        threadsEnabledEnabledReceivedEnabled = enabled
+    open override func threadsEnabled(enabled: Bool, threadSubscriptions: Bool) -> ClientBuilder {
+        threadsEnabledEnabledThreadSubscriptionsCallsCount += 1
+        threadsEnabledEnabledThreadSubscriptionsReceivedArguments = (enabled: enabled, threadSubscriptions: threadSubscriptions)
         DispatchQueue.main.async {
-            self.threadsEnabledEnabledReceivedInvocations.append(enabled)
+            self.threadsEnabledEnabledThreadSubscriptionsReceivedInvocations.append((enabled: enabled, threadSubscriptions: threadSubscriptions))
         }
-        if let threadsEnabledEnabledClosure = threadsEnabledEnabledClosure {
-            return threadsEnabledEnabledClosure(enabled)
+        if let threadsEnabledEnabledThreadSubscriptionsClosure = threadsEnabledEnabledThreadSubscriptionsClosure {
+            return threadsEnabledEnabledThreadSubscriptionsClosure(enabled, threadSubscriptions)
         } else {
-            return threadsEnabledEnabledReturnValue
+            return threadsEnabledEnabledThreadSubscriptionsReturnValue
         }
     }
 
@@ -12582,13 +12716,13 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
     open var fetchThreadSubscriptionThreadRootEventIdReceivedThreadRootEventId: String?
     open var fetchThreadSubscriptionThreadRootEventIdReceivedInvocations: [String] = []
 
-    var fetchThreadSubscriptionThreadRootEventIdUnderlyingReturnValue: ThreadStatus?
-    open var fetchThreadSubscriptionThreadRootEventIdReturnValue: ThreadStatus? {
+    var fetchThreadSubscriptionThreadRootEventIdUnderlyingReturnValue: ThreadSubscription?
+    open var fetchThreadSubscriptionThreadRootEventIdReturnValue: ThreadSubscription? {
         get {
             if Thread.isMainThread {
                 return fetchThreadSubscriptionThreadRootEventIdUnderlyingReturnValue
             } else {
-                var returnValue: ThreadStatus?? = nil
+                var returnValue: ThreadSubscription?? = nil
                 DispatchQueue.main.sync {
                     returnValue = fetchThreadSubscriptionThreadRootEventIdUnderlyingReturnValue
                 }
@@ -12606,9 +12740,9 @@ open class RoomSDKMock: MatrixRustSDK.Room, @unchecked Sendable {
             }
         }
     }
-    open var fetchThreadSubscriptionThreadRootEventIdClosure: ((String) async throws -> ThreadStatus?)?
+    open var fetchThreadSubscriptionThreadRootEventIdClosure: ((String) async throws -> ThreadSubscription?)?
 
-    open override func fetchThreadSubscription(threadRootEventId: String) async throws -> ThreadStatus? {
+    open override func fetchThreadSubscription(threadRootEventId: String) async throws -> ThreadSubscription? {
         if let error = fetchThreadSubscriptionThreadRootEventIdThrowableError {
             throw error
         }
@@ -21042,6 +21176,551 @@ open class SessionVerificationEmojiSDKMock: MatrixRustSDK.SessionVerificationEmo
         }
     }
 }
+open class SpaceRoomListSDKMock: MatrixRustSDK.SpaceRoomList, @unchecked Sendable {
+    init() {
+        super.init(noPointer: .init())
+    }
+
+    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    }
+
+    fileprivate var pointer: UnsafeMutableRawPointer!
+
+    //MARK: - paginate
+
+    open var paginateThrowableError: Error?
+    var paginateUnderlyingCallsCount = 0
+    open var paginateCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return paginateUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = paginateUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                paginateUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    paginateUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var paginateCalled: Bool {
+        return paginateCallsCount > 0
+    }
+    open var paginateClosure: (() async throws -> Void)?
+
+    open override func paginate() async throws {
+        if let error = paginateThrowableError {
+            throw error
+        }
+        paginateCallsCount += 1
+        try await paginateClosure?()
+    }
+
+    //MARK: - paginationState
+
+    var paginationStateUnderlyingCallsCount = 0
+    open var paginationStateCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return paginationStateUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = paginationStateUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                paginationStateUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    paginationStateUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var paginationStateCalled: Bool {
+        return paginationStateCallsCount > 0
+    }
+
+    var paginationStateUnderlyingReturnValue: SpaceRoomListPaginationState!
+    open var paginationStateReturnValue: SpaceRoomListPaginationState! {
+        get {
+            if Thread.isMainThread {
+                return paginationStateUnderlyingReturnValue
+            } else {
+                var returnValue: SpaceRoomListPaginationState? = nil
+                DispatchQueue.main.sync {
+                    returnValue = paginationStateUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                paginationStateUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    paginationStateUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var paginationStateClosure: (() -> SpaceRoomListPaginationState)?
+
+    open override func paginationState() -> SpaceRoomListPaginationState {
+        paginationStateCallsCount += 1
+        if let paginationStateClosure = paginationStateClosure {
+            return paginationStateClosure()
+        } else {
+            return paginationStateReturnValue
+        }
+    }
+
+    //MARK: - rooms
+
+    var roomsUnderlyingCallsCount = 0
+    open var roomsCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return roomsUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = roomsUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                roomsUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    roomsUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var roomsCalled: Bool {
+        return roomsCallsCount > 0
+    }
+
+    var roomsUnderlyingReturnValue: [SpaceRoom]!
+    open var roomsReturnValue: [SpaceRoom]! {
+        get {
+            if Thread.isMainThread {
+                return roomsUnderlyingReturnValue
+            } else {
+                var returnValue: [SpaceRoom]? = nil
+                DispatchQueue.main.sync {
+                    returnValue = roomsUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                roomsUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    roomsUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var roomsClosure: (() -> [SpaceRoom])?
+
+    open override func rooms() -> [SpaceRoom] {
+        roomsCallsCount += 1
+        if let roomsClosure = roomsClosure {
+            return roomsClosure()
+        } else {
+            return roomsReturnValue
+        }
+    }
+
+    //MARK: - subscribeToPaginationStateUpdates
+
+    var subscribeToPaginationStateUpdatesListenerUnderlyingCallsCount = 0
+    open var subscribeToPaginationStateUpdatesListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return subscribeToPaginationStateUpdatesListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToPaginationStateUpdatesListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToPaginationStateUpdatesListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToPaginationStateUpdatesListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToPaginationStateUpdatesListenerCalled: Bool {
+        return subscribeToPaginationStateUpdatesListenerCallsCount > 0
+    }
+    open var subscribeToPaginationStateUpdatesListenerReceivedListener: SpaceRoomListPaginationStateListener?
+    open var subscribeToPaginationStateUpdatesListenerReceivedInvocations: [SpaceRoomListPaginationStateListener] = []
+
+    var subscribeToPaginationStateUpdatesListenerUnderlyingReturnValue: TaskHandle!
+    open var subscribeToPaginationStateUpdatesListenerReturnValue: TaskHandle! {
+        get {
+            if Thread.isMainThread {
+                return subscribeToPaginationStateUpdatesListenerUnderlyingReturnValue
+            } else {
+                var returnValue: TaskHandle? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToPaginationStateUpdatesListenerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToPaginationStateUpdatesListenerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToPaginationStateUpdatesListenerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToPaginationStateUpdatesListenerClosure: ((SpaceRoomListPaginationStateListener) -> TaskHandle)?
+
+    open override func subscribeToPaginationStateUpdates(listener: SpaceRoomListPaginationStateListener) -> TaskHandle {
+        subscribeToPaginationStateUpdatesListenerCallsCount += 1
+        subscribeToPaginationStateUpdatesListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.subscribeToPaginationStateUpdatesListenerReceivedInvocations.append(listener)
+        }
+        if let subscribeToPaginationStateUpdatesListenerClosure = subscribeToPaginationStateUpdatesListenerClosure {
+            return subscribeToPaginationStateUpdatesListenerClosure(listener)
+        } else {
+            return subscribeToPaginationStateUpdatesListenerReturnValue
+        }
+    }
+
+    //MARK: - subscribeToRoomUpdate
+
+    var subscribeToRoomUpdateListenerUnderlyingCallsCount = 0
+    open var subscribeToRoomUpdateListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return subscribeToRoomUpdateListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToRoomUpdateListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToRoomUpdateListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToRoomUpdateListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToRoomUpdateListenerCalled: Bool {
+        return subscribeToRoomUpdateListenerCallsCount > 0
+    }
+    open var subscribeToRoomUpdateListenerReceivedListener: SpaceRoomListEntriesListener?
+    open var subscribeToRoomUpdateListenerReceivedInvocations: [SpaceRoomListEntriesListener] = []
+
+    var subscribeToRoomUpdateListenerUnderlyingReturnValue: TaskHandle!
+    open var subscribeToRoomUpdateListenerReturnValue: TaskHandle! {
+        get {
+            if Thread.isMainThread {
+                return subscribeToRoomUpdateListenerUnderlyingReturnValue
+            } else {
+                var returnValue: TaskHandle? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToRoomUpdateListenerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToRoomUpdateListenerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToRoomUpdateListenerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToRoomUpdateListenerClosure: ((SpaceRoomListEntriesListener) -> TaskHandle)?
+
+    open override func subscribeToRoomUpdate(listener: SpaceRoomListEntriesListener) -> TaskHandle {
+        subscribeToRoomUpdateListenerCallsCount += 1
+        subscribeToRoomUpdateListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.subscribeToRoomUpdateListenerReceivedInvocations.append(listener)
+        }
+        if let subscribeToRoomUpdateListenerClosure = subscribeToRoomUpdateListenerClosure {
+            return subscribeToRoomUpdateListenerClosure(listener)
+        } else {
+            return subscribeToRoomUpdateListenerReturnValue
+        }
+    }
+}
+open class SpaceServiceSDKMock: MatrixRustSDK.SpaceService, @unchecked Sendable {
+    init() {
+        super.init(noPointer: .init())
+    }
+
+    public required init(unsafeFromRawPointer pointer: UnsafeMutableRawPointer) {
+        fatalError("init(unsafeFromRawPointer:) has not been implemented")
+    }
+
+    fileprivate var pointer: UnsafeMutableRawPointer!
+
+    //MARK: - joinedSpaces
+
+    var joinedSpacesUnderlyingCallsCount = 0
+    open var joinedSpacesCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return joinedSpacesUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = joinedSpacesUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                joinedSpacesUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    joinedSpacesUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var joinedSpacesCalled: Bool {
+        return joinedSpacesCallsCount > 0
+    }
+
+    var joinedSpacesUnderlyingReturnValue: [SpaceRoom]!
+    open var joinedSpacesReturnValue: [SpaceRoom]! {
+        get {
+            if Thread.isMainThread {
+                return joinedSpacesUnderlyingReturnValue
+            } else {
+                var returnValue: [SpaceRoom]? = nil
+                DispatchQueue.main.sync {
+                    returnValue = joinedSpacesUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                joinedSpacesUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    joinedSpacesUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var joinedSpacesClosure: (() async -> [SpaceRoom])?
+
+    open override func joinedSpaces() async -> [SpaceRoom] {
+        joinedSpacesCallsCount += 1
+        if let joinedSpacesClosure = joinedSpacesClosure {
+            return await joinedSpacesClosure()
+        } else {
+            return joinedSpacesReturnValue
+        }
+    }
+
+    //MARK: - spaceRoomList
+
+    open var spaceRoomListSpaceIdThrowableError: Error?
+    var spaceRoomListSpaceIdUnderlyingCallsCount = 0
+    open var spaceRoomListSpaceIdCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return spaceRoomListSpaceIdUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = spaceRoomListSpaceIdUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                spaceRoomListSpaceIdUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    spaceRoomListSpaceIdUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var spaceRoomListSpaceIdCalled: Bool {
+        return spaceRoomListSpaceIdCallsCount > 0
+    }
+    open var spaceRoomListSpaceIdReceivedSpaceId: String?
+    open var spaceRoomListSpaceIdReceivedInvocations: [String] = []
+
+    var spaceRoomListSpaceIdUnderlyingReturnValue: SpaceRoomList!
+    open var spaceRoomListSpaceIdReturnValue: SpaceRoomList! {
+        get {
+            if Thread.isMainThread {
+                return spaceRoomListSpaceIdUnderlyingReturnValue
+            } else {
+                var returnValue: SpaceRoomList? = nil
+                DispatchQueue.main.sync {
+                    returnValue = spaceRoomListSpaceIdUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                spaceRoomListSpaceIdUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    spaceRoomListSpaceIdUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var spaceRoomListSpaceIdClosure: ((String) async throws -> SpaceRoomList)?
+
+    open override func spaceRoomList(spaceId: String) async throws -> SpaceRoomList {
+        if let error = spaceRoomListSpaceIdThrowableError {
+            throw error
+        }
+        spaceRoomListSpaceIdCallsCount += 1
+        spaceRoomListSpaceIdReceivedSpaceId = spaceId
+        DispatchQueue.main.async {
+            self.spaceRoomListSpaceIdReceivedInvocations.append(spaceId)
+        }
+        if let spaceRoomListSpaceIdClosure = spaceRoomListSpaceIdClosure {
+            return try await spaceRoomListSpaceIdClosure(spaceId)
+        } else {
+            return spaceRoomListSpaceIdReturnValue
+        }
+    }
+
+    //MARK: - subscribeToJoinedSpaces
+
+    var subscribeToJoinedSpacesListenerUnderlyingCallsCount = 0
+    open var subscribeToJoinedSpacesListenerCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return subscribeToJoinedSpacesListenerUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToJoinedSpacesListenerUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToJoinedSpacesListenerUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToJoinedSpacesListenerUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToJoinedSpacesListenerCalled: Bool {
+        return subscribeToJoinedSpacesListenerCallsCount > 0
+    }
+    open var subscribeToJoinedSpacesListenerReceivedListener: SpaceServiceJoinedSpacesListener?
+    open var subscribeToJoinedSpacesListenerReceivedInvocations: [SpaceServiceJoinedSpacesListener] = []
+
+    var subscribeToJoinedSpacesListenerUnderlyingReturnValue: TaskHandle!
+    open var subscribeToJoinedSpacesListenerReturnValue: TaskHandle! {
+        get {
+            if Thread.isMainThread {
+                return subscribeToJoinedSpacesListenerUnderlyingReturnValue
+            } else {
+                var returnValue: TaskHandle? = nil
+                DispatchQueue.main.sync {
+                    returnValue = subscribeToJoinedSpacesListenerUnderlyingReturnValue
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                subscribeToJoinedSpacesListenerUnderlyingReturnValue = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    subscribeToJoinedSpacesListenerUnderlyingReturnValue = newValue
+                }
+            }
+        }
+    }
+    open var subscribeToJoinedSpacesListenerClosure: ((SpaceServiceJoinedSpacesListener) async -> TaskHandle)?
+
+    open override func subscribeToJoinedSpaces(listener: SpaceServiceJoinedSpacesListener) async -> TaskHandle {
+        subscribeToJoinedSpacesListenerCallsCount += 1
+        subscribeToJoinedSpacesListenerReceivedListener = listener
+        DispatchQueue.main.async {
+            self.subscribeToJoinedSpacesListenerReceivedInvocations.append(listener)
+        }
+        if let subscribeToJoinedSpacesListenerClosure = subscribeToJoinedSpacesListenerClosure {
+            return await subscribeToJoinedSpacesListenerClosure(listener)
+        } else {
+            return subscribeToJoinedSpacesListenerReturnValue
+        }
+    }
+}
 open class SpanSDKMock: MatrixRustSDK.Span, @unchecked Sendable {
     init() {
         super.init(noPointer: .init())
@@ -21325,6 +22004,42 @@ open class SyncServiceSDKMock: MatrixRustSDK.SyncService, @unchecked Sendable {
     }
 
     fileprivate var pointer: UnsafeMutableRawPointer!
+
+    //MARK: - expireSessions
+
+    var expireSessionsUnderlyingCallsCount = 0
+    open var expireSessionsCallsCount: Int {
+        get {
+            if Thread.isMainThread {
+                return expireSessionsUnderlyingCallsCount
+            } else {
+                var returnValue: Int? = nil
+                DispatchQueue.main.sync {
+                    returnValue = expireSessionsUnderlyingCallsCount
+                }
+
+                return returnValue!
+            }
+        }
+        set {
+            if Thread.isMainThread {
+                expireSessionsUnderlyingCallsCount = newValue
+            } else {
+                DispatchQueue.main.sync {
+                    expireSessionsUnderlyingCallsCount = newValue
+                }
+            }
+        }
+    }
+    open var expireSessionsCalled: Bool {
+        return expireSessionsCallsCount > 0
+    }
+    open var expireSessionsClosure: (() async -> Void)?
+
+    open override func expireSessions() async {
+        expireSessionsCallsCount += 1
+        await expireSessionsClosure?()
+    }
 
     //MARK: - roomListService
 
@@ -23027,16 +23742,16 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
 
     //MARK: - sendAudio
 
-    open var sendAudioParamsAudioInfoProgressWatcherThrowableError: Error?
-    var sendAudioParamsAudioInfoProgressWatcherUnderlyingCallsCount = 0
-    open var sendAudioParamsAudioInfoProgressWatcherCallsCount: Int {
+    open var sendAudioParamsAudioInfoThrowableError: Error?
+    var sendAudioParamsAudioInfoUnderlyingCallsCount = 0
+    open var sendAudioParamsAudioInfoCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return sendAudioParamsAudioInfoProgressWatcherUnderlyingCallsCount
+                return sendAudioParamsAudioInfoUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendAudioParamsAudioInfoProgressWatcherUnderlyingCallsCount
+                    returnValue = sendAudioParamsAudioInfoUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -23044,29 +23759,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendAudioParamsAudioInfoProgressWatcherUnderlyingCallsCount = newValue
+                sendAudioParamsAudioInfoUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendAudioParamsAudioInfoProgressWatcherUnderlyingCallsCount = newValue
+                    sendAudioParamsAudioInfoUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var sendAudioParamsAudioInfoProgressWatcherCalled: Bool {
-        return sendAudioParamsAudioInfoProgressWatcherCallsCount > 0
+    open var sendAudioParamsAudioInfoCalled: Bool {
+        return sendAudioParamsAudioInfoCallsCount > 0
     }
-    open var sendAudioParamsAudioInfoProgressWatcherReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo, progressWatcher: ProgressWatcher?)?
-    open var sendAudioParamsAudioInfoProgressWatcherReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo, progressWatcher: ProgressWatcher?)] = []
+    open var sendAudioParamsAudioInfoReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo)?
+    open var sendAudioParamsAudioInfoReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo)] = []
 
-    var sendAudioParamsAudioInfoProgressWatcherUnderlyingReturnValue: SendAttachmentJoinHandle!
-    open var sendAudioParamsAudioInfoProgressWatcherReturnValue: SendAttachmentJoinHandle! {
+    var sendAudioParamsAudioInfoUnderlyingReturnValue: SendAttachmentJoinHandle!
+    open var sendAudioParamsAudioInfoReturnValue: SendAttachmentJoinHandle! {
         get {
             if Thread.isMainThread {
-                return sendAudioParamsAudioInfoProgressWatcherUnderlyingReturnValue
+                return sendAudioParamsAudioInfoUnderlyingReturnValue
             } else {
                 var returnValue: SendAttachmentJoinHandle? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendAudioParamsAudioInfoProgressWatcherUnderlyingReturnValue
+                    returnValue = sendAudioParamsAudioInfoUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -23074,44 +23789,44 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendAudioParamsAudioInfoProgressWatcherUnderlyingReturnValue = newValue
+                sendAudioParamsAudioInfoUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendAudioParamsAudioInfoProgressWatcherUnderlyingReturnValue = newValue
+                    sendAudioParamsAudioInfoUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var sendAudioParamsAudioInfoProgressWatcherClosure: ((UploadParameters, AudioInfo, ProgressWatcher?) throws -> SendAttachmentJoinHandle)?
+    open var sendAudioParamsAudioInfoClosure: ((UploadParameters, AudioInfo) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendAudio(params: UploadParameters, audioInfo: AudioInfo, progressWatcher: ProgressWatcher?) throws -> SendAttachmentJoinHandle {
-        if let error = sendAudioParamsAudioInfoProgressWatcherThrowableError {
+    open override func sendAudio(params: UploadParameters, audioInfo: AudioInfo) throws -> SendAttachmentJoinHandle {
+        if let error = sendAudioParamsAudioInfoThrowableError {
             throw error
         }
-        sendAudioParamsAudioInfoProgressWatcherCallsCount += 1
-        sendAudioParamsAudioInfoProgressWatcherReceivedArguments = (params: params, audioInfo: audioInfo, progressWatcher: progressWatcher)
+        sendAudioParamsAudioInfoCallsCount += 1
+        sendAudioParamsAudioInfoReceivedArguments = (params: params, audioInfo: audioInfo)
         DispatchQueue.main.async {
-            self.sendAudioParamsAudioInfoProgressWatcherReceivedInvocations.append((params: params, audioInfo: audioInfo, progressWatcher: progressWatcher))
+            self.sendAudioParamsAudioInfoReceivedInvocations.append((params: params, audioInfo: audioInfo))
         }
-        if let sendAudioParamsAudioInfoProgressWatcherClosure = sendAudioParamsAudioInfoProgressWatcherClosure {
-            return try sendAudioParamsAudioInfoProgressWatcherClosure(params, audioInfo, progressWatcher)
+        if let sendAudioParamsAudioInfoClosure = sendAudioParamsAudioInfoClosure {
+            return try sendAudioParamsAudioInfoClosure(params, audioInfo)
         } else {
-            return sendAudioParamsAudioInfoProgressWatcherReturnValue
+            return sendAudioParamsAudioInfoReturnValue
         }
     }
 
     //MARK: - sendFile
 
-    open var sendFileParamsFileInfoProgressWatcherThrowableError: Error?
-    var sendFileParamsFileInfoProgressWatcherUnderlyingCallsCount = 0
-    open var sendFileParamsFileInfoProgressWatcherCallsCount: Int {
+    open var sendFileParamsFileInfoThrowableError: Error?
+    var sendFileParamsFileInfoUnderlyingCallsCount = 0
+    open var sendFileParamsFileInfoCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return sendFileParamsFileInfoProgressWatcherUnderlyingCallsCount
+                return sendFileParamsFileInfoUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendFileParamsFileInfoProgressWatcherUnderlyingCallsCount
+                    returnValue = sendFileParamsFileInfoUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -23119,29 +23834,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendFileParamsFileInfoProgressWatcherUnderlyingCallsCount = newValue
+                sendFileParamsFileInfoUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendFileParamsFileInfoProgressWatcherUnderlyingCallsCount = newValue
+                    sendFileParamsFileInfoUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var sendFileParamsFileInfoProgressWatcherCalled: Bool {
-        return sendFileParamsFileInfoProgressWatcherCallsCount > 0
+    open var sendFileParamsFileInfoCalled: Bool {
+        return sendFileParamsFileInfoCallsCount > 0
     }
-    open var sendFileParamsFileInfoProgressWatcherReceivedArguments: (params: UploadParameters, fileInfo: FileInfo, progressWatcher: ProgressWatcher?)?
-    open var sendFileParamsFileInfoProgressWatcherReceivedInvocations: [(params: UploadParameters, fileInfo: FileInfo, progressWatcher: ProgressWatcher?)] = []
+    open var sendFileParamsFileInfoReceivedArguments: (params: UploadParameters, fileInfo: FileInfo)?
+    open var sendFileParamsFileInfoReceivedInvocations: [(params: UploadParameters, fileInfo: FileInfo)] = []
 
-    var sendFileParamsFileInfoProgressWatcherUnderlyingReturnValue: SendAttachmentJoinHandle!
-    open var sendFileParamsFileInfoProgressWatcherReturnValue: SendAttachmentJoinHandle! {
+    var sendFileParamsFileInfoUnderlyingReturnValue: SendAttachmentJoinHandle!
+    open var sendFileParamsFileInfoReturnValue: SendAttachmentJoinHandle! {
         get {
             if Thread.isMainThread {
-                return sendFileParamsFileInfoProgressWatcherUnderlyingReturnValue
+                return sendFileParamsFileInfoUnderlyingReturnValue
             } else {
                 var returnValue: SendAttachmentJoinHandle? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendFileParamsFileInfoProgressWatcherUnderlyingReturnValue
+                    returnValue = sendFileParamsFileInfoUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -23149,29 +23864,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendFileParamsFileInfoProgressWatcherUnderlyingReturnValue = newValue
+                sendFileParamsFileInfoUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendFileParamsFileInfoProgressWatcherUnderlyingReturnValue = newValue
+                    sendFileParamsFileInfoUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var sendFileParamsFileInfoProgressWatcherClosure: ((UploadParameters, FileInfo, ProgressWatcher?) throws -> SendAttachmentJoinHandle)?
+    open var sendFileParamsFileInfoClosure: ((UploadParameters, FileInfo) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendFile(params: UploadParameters, fileInfo: FileInfo, progressWatcher: ProgressWatcher?) throws -> SendAttachmentJoinHandle {
-        if let error = sendFileParamsFileInfoProgressWatcherThrowableError {
+    open override func sendFile(params: UploadParameters, fileInfo: FileInfo) throws -> SendAttachmentJoinHandle {
+        if let error = sendFileParamsFileInfoThrowableError {
             throw error
         }
-        sendFileParamsFileInfoProgressWatcherCallsCount += 1
-        sendFileParamsFileInfoProgressWatcherReceivedArguments = (params: params, fileInfo: fileInfo, progressWatcher: progressWatcher)
+        sendFileParamsFileInfoCallsCount += 1
+        sendFileParamsFileInfoReceivedArguments = (params: params, fileInfo: fileInfo)
         DispatchQueue.main.async {
-            self.sendFileParamsFileInfoProgressWatcherReceivedInvocations.append((params: params, fileInfo: fileInfo, progressWatcher: progressWatcher))
+            self.sendFileParamsFileInfoReceivedInvocations.append((params: params, fileInfo: fileInfo))
         }
-        if let sendFileParamsFileInfoProgressWatcherClosure = sendFileParamsFileInfoProgressWatcherClosure {
-            return try sendFileParamsFileInfoProgressWatcherClosure(params, fileInfo, progressWatcher)
+        if let sendFileParamsFileInfoClosure = sendFileParamsFileInfoClosure {
+            return try sendFileParamsFileInfoClosure(params, fileInfo)
         } else {
-            return sendFileParamsFileInfoProgressWatcherReturnValue
+            return sendFileParamsFileInfoReturnValue
         }
     }
 
@@ -23252,16 +23967,16 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
 
     //MARK: - sendImage
 
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherThrowableError: Error?
-    var sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingCallsCount = 0
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherCallsCount: Int {
+    open var sendImageParamsThumbnailSourceImageInfoThrowableError: Error?
+    var sendImageParamsThumbnailSourceImageInfoUnderlyingCallsCount = 0
+    open var sendImageParamsThumbnailSourceImageInfoCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingCallsCount
+                return sendImageParamsThumbnailSourceImageInfoUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingCallsCount
+                    returnValue = sendImageParamsThumbnailSourceImageInfoUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -23269,29 +23984,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingCallsCount = newValue
+                sendImageParamsThumbnailSourceImageInfoUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingCallsCount = newValue
+                    sendImageParamsThumbnailSourceImageInfoUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherCalled: Bool {
-        return sendImageParamsThumbnailPathImageInfoProgressWatcherCallsCount > 0
+    open var sendImageParamsThumbnailSourceImageInfoCalled: Bool {
+        return sendImageParamsThumbnailSourceImageInfoCallsCount > 0
     }
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherReceivedArguments: (params: UploadParameters, thumbnailPath: String?, imageInfo: ImageInfo, progressWatcher: ProgressWatcher?)?
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherReceivedInvocations: [(params: UploadParameters, thumbnailPath: String?, imageInfo: ImageInfo, progressWatcher: ProgressWatcher?)] = []
+    open var sendImageParamsThumbnailSourceImageInfoReceivedArguments: (params: UploadParameters, thumbnailSource: UploadSource?, imageInfo: ImageInfo)?
+    open var sendImageParamsThumbnailSourceImageInfoReceivedInvocations: [(params: UploadParameters, thumbnailSource: UploadSource?, imageInfo: ImageInfo)] = []
 
-    var sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingReturnValue: SendAttachmentJoinHandle!
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherReturnValue: SendAttachmentJoinHandle! {
+    var sendImageParamsThumbnailSourceImageInfoUnderlyingReturnValue: SendAttachmentJoinHandle!
+    open var sendImageParamsThumbnailSourceImageInfoReturnValue: SendAttachmentJoinHandle! {
         get {
             if Thread.isMainThread {
-                return sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingReturnValue
+                return sendImageParamsThumbnailSourceImageInfoUnderlyingReturnValue
             } else {
                 var returnValue: SendAttachmentJoinHandle? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingReturnValue
+                    returnValue = sendImageParamsThumbnailSourceImageInfoUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -23299,29 +24014,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingReturnValue = newValue
+                sendImageParamsThumbnailSourceImageInfoUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendImageParamsThumbnailPathImageInfoProgressWatcherUnderlyingReturnValue = newValue
+                    sendImageParamsThumbnailSourceImageInfoUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var sendImageParamsThumbnailPathImageInfoProgressWatcherClosure: ((UploadParameters, String?, ImageInfo, ProgressWatcher?) throws -> SendAttachmentJoinHandle)?
+    open var sendImageParamsThumbnailSourceImageInfoClosure: ((UploadParameters, UploadSource?, ImageInfo) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendImage(params: UploadParameters, thumbnailPath: String?, imageInfo: ImageInfo, progressWatcher: ProgressWatcher?) throws -> SendAttachmentJoinHandle {
-        if let error = sendImageParamsThumbnailPathImageInfoProgressWatcherThrowableError {
+    open override func sendImage(params: UploadParameters, thumbnailSource: UploadSource?, imageInfo: ImageInfo) throws -> SendAttachmentJoinHandle {
+        if let error = sendImageParamsThumbnailSourceImageInfoThrowableError {
             throw error
         }
-        sendImageParamsThumbnailPathImageInfoProgressWatcherCallsCount += 1
-        sendImageParamsThumbnailPathImageInfoProgressWatcherReceivedArguments = (params: params, thumbnailPath: thumbnailPath, imageInfo: imageInfo, progressWatcher: progressWatcher)
+        sendImageParamsThumbnailSourceImageInfoCallsCount += 1
+        sendImageParamsThumbnailSourceImageInfoReceivedArguments = (params: params, thumbnailSource: thumbnailSource, imageInfo: imageInfo)
         DispatchQueue.main.async {
-            self.sendImageParamsThumbnailPathImageInfoProgressWatcherReceivedInvocations.append((params: params, thumbnailPath: thumbnailPath, imageInfo: imageInfo, progressWatcher: progressWatcher))
+            self.sendImageParamsThumbnailSourceImageInfoReceivedInvocations.append((params: params, thumbnailSource: thumbnailSource, imageInfo: imageInfo))
         }
-        if let sendImageParamsThumbnailPathImageInfoProgressWatcherClosure = sendImageParamsThumbnailPathImageInfoProgressWatcherClosure {
-            return try sendImageParamsThumbnailPathImageInfoProgressWatcherClosure(params, thumbnailPath, imageInfo, progressWatcher)
+        if let sendImageParamsThumbnailSourceImageInfoClosure = sendImageParamsThumbnailSourceImageInfoClosure {
+            return try sendImageParamsThumbnailSourceImageInfoClosure(params, thumbnailSource, imageInfo)
         } else {
-            return sendImageParamsThumbnailPathImageInfoProgressWatcherReturnValue
+            return sendImageParamsThumbnailSourceImageInfoReturnValue
         }
     }
 
@@ -23511,16 +24226,16 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
 
     //MARK: - sendVideo
 
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherThrowableError: Error?
-    var sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingCallsCount = 0
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherCallsCount: Int {
+    open var sendVideoParamsThumbnailSourceVideoInfoThrowableError: Error?
+    var sendVideoParamsThumbnailSourceVideoInfoUnderlyingCallsCount = 0
+    open var sendVideoParamsThumbnailSourceVideoInfoCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingCallsCount
+                return sendVideoParamsThumbnailSourceVideoInfoUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingCallsCount
+                    returnValue = sendVideoParamsThumbnailSourceVideoInfoUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -23528,29 +24243,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingCallsCount = newValue
+                sendVideoParamsThumbnailSourceVideoInfoUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingCallsCount = newValue
+                    sendVideoParamsThumbnailSourceVideoInfoUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherCalled: Bool {
-        return sendVideoParamsThumbnailPathVideoInfoProgressWatcherCallsCount > 0
+    open var sendVideoParamsThumbnailSourceVideoInfoCalled: Bool {
+        return sendVideoParamsThumbnailSourceVideoInfoCallsCount > 0
     }
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherReceivedArguments: (params: UploadParameters, thumbnailPath: String?, videoInfo: VideoInfo, progressWatcher: ProgressWatcher?)?
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherReceivedInvocations: [(params: UploadParameters, thumbnailPath: String?, videoInfo: VideoInfo, progressWatcher: ProgressWatcher?)] = []
+    open var sendVideoParamsThumbnailSourceVideoInfoReceivedArguments: (params: UploadParameters, thumbnailSource: UploadSource?, videoInfo: VideoInfo)?
+    open var sendVideoParamsThumbnailSourceVideoInfoReceivedInvocations: [(params: UploadParameters, thumbnailSource: UploadSource?, videoInfo: VideoInfo)] = []
 
-    var sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingReturnValue: SendAttachmentJoinHandle!
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherReturnValue: SendAttachmentJoinHandle! {
+    var sendVideoParamsThumbnailSourceVideoInfoUnderlyingReturnValue: SendAttachmentJoinHandle!
+    open var sendVideoParamsThumbnailSourceVideoInfoReturnValue: SendAttachmentJoinHandle! {
         get {
             if Thread.isMainThread {
-                return sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingReturnValue
+                return sendVideoParamsThumbnailSourceVideoInfoUnderlyingReturnValue
             } else {
                 var returnValue: SendAttachmentJoinHandle? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingReturnValue
+                    returnValue = sendVideoParamsThumbnailSourceVideoInfoUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -23558,44 +24273,44 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingReturnValue = newValue
+                sendVideoParamsThumbnailSourceVideoInfoUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendVideoParamsThumbnailPathVideoInfoProgressWatcherUnderlyingReturnValue = newValue
+                    sendVideoParamsThumbnailSourceVideoInfoUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var sendVideoParamsThumbnailPathVideoInfoProgressWatcherClosure: ((UploadParameters, String?, VideoInfo, ProgressWatcher?) throws -> SendAttachmentJoinHandle)?
+    open var sendVideoParamsThumbnailSourceVideoInfoClosure: ((UploadParameters, UploadSource?, VideoInfo) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendVideo(params: UploadParameters, thumbnailPath: String?, videoInfo: VideoInfo, progressWatcher: ProgressWatcher?) throws -> SendAttachmentJoinHandle {
-        if let error = sendVideoParamsThumbnailPathVideoInfoProgressWatcherThrowableError {
+    open override func sendVideo(params: UploadParameters, thumbnailSource: UploadSource?, videoInfo: VideoInfo) throws -> SendAttachmentJoinHandle {
+        if let error = sendVideoParamsThumbnailSourceVideoInfoThrowableError {
             throw error
         }
-        sendVideoParamsThumbnailPathVideoInfoProgressWatcherCallsCount += 1
-        sendVideoParamsThumbnailPathVideoInfoProgressWatcherReceivedArguments = (params: params, thumbnailPath: thumbnailPath, videoInfo: videoInfo, progressWatcher: progressWatcher)
+        sendVideoParamsThumbnailSourceVideoInfoCallsCount += 1
+        sendVideoParamsThumbnailSourceVideoInfoReceivedArguments = (params: params, thumbnailSource: thumbnailSource, videoInfo: videoInfo)
         DispatchQueue.main.async {
-            self.sendVideoParamsThumbnailPathVideoInfoProgressWatcherReceivedInvocations.append((params: params, thumbnailPath: thumbnailPath, videoInfo: videoInfo, progressWatcher: progressWatcher))
+            self.sendVideoParamsThumbnailSourceVideoInfoReceivedInvocations.append((params: params, thumbnailSource: thumbnailSource, videoInfo: videoInfo))
         }
-        if let sendVideoParamsThumbnailPathVideoInfoProgressWatcherClosure = sendVideoParamsThumbnailPathVideoInfoProgressWatcherClosure {
-            return try sendVideoParamsThumbnailPathVideoInfoProgressWatcherClosure(params, thumbnailPath, videoInfo, progressWatcher)
+        if let sendVideoParamsThumbnailSourceVideoInfoClosure = sendVideoParamsThumbnailSourceVideoInfoClosure {
+            return try sendVideoParamsThumbnailSourceVideoInfoClosure(params, thumbnailSource, videoInfo)
         } else {
-            return sendVideoParamsThumbnailPathVideoInfoProgressWatcherReturnValue
+            return sendVideoParamsThumbnailSourceVideoInfoReturnValue
         }
     }
 
     //MARK: - sendVoiceMessage
 
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherThrowableError: Error?
-    var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingCallsCount = 0
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherCallsCount: Int {
+    open var sendVoiceMessageParamsAudioInfoWaveformThrowableError: Error?
+    var sendVoiceMessageParamsAudioInfoWaveformUnderlyingCallsCount = 0
+    open var sendVoiceMessageParamsAudioInfoWaveformCallsCount: Int {
         get {
             if Thread.isMainThread {
-                return sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingCallsCount
+                return sendVoiceMessageParamsAudioInfoWaveformUnderlyingCallsCount
             } else {
                 var returnValue: Int? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingCallsCount
+                    returnValue = sendVoiceMessageParamsAudioInfoWaveformUnderlyingCallsCount
                 }
 
                 return returnValue!
@@ -23603,29 +24318,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingCallsCount = newValue
+                sendVoiceMessageParamsAudioInfoWaveformUnderlyingCallsCount = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingCallsCount = newValue
+                    sendVoiceMessageParamsAudioInfoWaveformUnderlyingCallsCount = newValue
                 }
             }
         }
     }
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherCalled: Bool {
-        return sendVoiceMessageParamsAudioInfoWaveformProgressWatcherCallsCount > 0
+    open var sendVoiceMessageParamsAudioInfoWaveformCalled: Bool {
+        return sendVoiceMessageParamsAudioInfoWaveformCallsCount > 0
     }
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16], progressWatcher: ProgressWatcher?)?
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16], progressWatcher: ProgressWatcher?)] = []
+    open var sendVoiceMessageParamsAudioInfoWaveformReceivedArguments: (params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16])?
+    open var sendVoiceMessageParamsAudioInfoWaveformReceivedInvocations: [(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16])] = []
 
-    var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingReturnValue: SendAttachmentJoinHandle!
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReturnValue: SendAttachmentJoinHandle! {
+    var sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue: SendAttachmentJoinHandle!
+    open var sendVoiceMessageParamsAudioInfoWaveformReturnValue: SendAttachmentJoinHandle! {
         get {
             if Thread.isMainThread {
-                return sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingReturnValue
+                return sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue
             } else {
                 var returnValue: SendAttachmentJoinHandle? = nil
                 DispatchQueue.main.sync {
-                    returnValue = sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingReturnValue
+                    returnValue = sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue
                 }
 
                 return returnValue!
@@ -23633,29 +24348,29 @@ open class TimelineSDKMock: MatrixRustSDK.Timeline, @unchecked Sendable {
         }
         set {
             if Thread.isMainThread {
-                sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingReturnValue = newValue
+                sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue = newValue
             } else {
                 DispatchQueue.main.sync {
-                    sendVoiceMessageParamsAudioInfoWaveformProgressWatcherUnderlyingReturnValue = newValue
+                    sendVoiceMessageParamsAudioInfoWaveformUnderlyingReturnValue = newValue
                 }
             }
         }
     }
-    open var sendVoiceMessageParamsAudioInfoWaveformProgressWatcherClosure: ((UploadParameters, AudioInfo, [UInt16], ProgressWatcher?) throws -> SendAttachmentJoinHandle)?
+    open var sendVoiceMessageParamsAudioInfoWaveformClosure: ((UploadParameters, AudioInfo, [UInt16]) throws -> SendAttachmentJoinHandle)?
 
-    open override func sendVoiceMessage(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16], progressWatcher: ProgressWatcher?) throws -> SendAttachmentJoinHandle {
-        if let error = sendVoiceMessageParamsAudioInfoWaveformProgressWatcherThrowableError {
+    open override func sendVoiceMessage(params: UploadParameters, audioInfo: AudioInfo, waveform: [UInt16]) throws -> SendAttachmentJoinHandle {
+        if let error = sendVoiceMessageParamsAudioInfoWaveformThrowableError {
             throw error
         }
-        sendVoiceMessageParamsAudioInfoWaveformProgressWatcherCallsCount += 1
-        sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReceivedArguments = (params: params, audioInfo: audioInfo, waveform: waveform, progressWatcher: progressWatcher)
+        sendVoiceMessageParamsAudioInfoWaveformCallsCount += 1
+        sendVoiceMessageParamsAudioInfoWaveformReceivedArguments = (params: params, audioInfo: audioInfo, waveform: waveform)
         DispatchQueue.main.async {
-            self.sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReceivedInvocations.append((params: params, audioInfo: audioInfo, waveform: waveform, progressWatcher: progressWatcher))
+            self.sendVoiceMessageParamsAudioInfoWaveformReceivedInvocations.append((params: params, audioInfo: audioInfo, waveform: waveform))
         }
-        if let sendVoiceMessageParamsAudioInfoWaveformProgressWatcherClosure = sendVoiceMessageParamsAudioInfoWaveformProgressWatcherClosure {
-            return try sendVoiceMessageParamsAudioInfoWaveformProgressWatcherClosure(params, audioInfo, waveform, progressWatcher)
+        if let sendVoiceMessageParamsAudioInfoWaveformClosure = sendVoiceMessageParamsAudioInfoWaveformClosure {
+            return try sendVoiceMessageParamsAudioInfoWaveformClosure(params, audioInfo, waveform)
         } else {
-            return sendVoiceMessageParamsAudioInfoWaveformProgressWatcherReturnValue
+            return sendVoiceMessageParamsAudioInfoWaveformReturnValue
         }
     }
 

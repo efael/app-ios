@@ -73,7 +73,7 @@ enum TimelineMediaVisibility: Decodable {
 }
 
 // sourcery: AutoMockable
-protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
+protocol ClientProxyProtocol: AnyObject {
     var actionsPublisher: AnyPublisher<ClientProxyAction, Never> { get }
     
     var loadingStatePublisher: CurrentValuePublisher<ClientProxyLoadingState, Never> { get }
@@ -103,6 +103,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     
     var pusherNotificationClientIdentifier: String? { get }
     
+    var mediaLoader: MediaLoaderProtocol { get }
+    
     var roomSummaryProvider: RoomSummaryProviderProtocol { get }
     
     /// Used for listing rooms that shouldn't be affected by the main `roomSummaryProvider` filtering
@@ -120,6 +122,8 @@ protocol ClientProxyProtocol: AnyObject, MediaLoaderProtocol {
     var secureBackupController: SecureBackupControllerProtocol { get }
     
     var sessionVerificationController: SessionVerificationControllerProxyProtocol? { get }
+    
+    var spaceService: SpaceServiceProxyProtocol { get }
     
     var isReportRoomSupported: Bool { get async }
     

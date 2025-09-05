@@ -36,6 +36,9 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.threadsEnabled) {
                     Text("Threads")
                 }
+                Toggle(isOn: $context.spacesEnabled) {
+                    Text("Spaces")
+                }
             }
             
             Section("Room List") {
@@ -50,25 +53,16 @@ struct DeveloperOptionsScreen: View {
                 Toggle(isOn: $context.fuzzyRoomListSearchEnabled) {
                     Text("Fuzzy searching")
                 }
-            }
-            
-            Section("Timeline") {
-                Toggle(isOn: $context.multipleAttachmentUploadEnabled) {
-                    Text("Allow selecting multiple attachments for upload")
+                
+                Toggle(isOn: $context.lowPriorityFilterEnabled) {
+                    Text("Low priority filter")
                 }
             }
-            
+                        
             Section("Join rules") {
                 Toggle(isOn: $context.knockingEnabled) {
                     Text("Knocking")
                     Text("Ask to join rooms")
-                }
-            }
-            
-            Section("Sync") {
-                Toggle(isOn: $context.sharePosEnabled) {
-                    Text("Share pos")
-                    Text("Keep the sliding sync pos to make initial syncs faster. Requires an app restart to take effect. Might make the sync unstable.")
                 }
             }
             

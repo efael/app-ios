@@ -40,7 +40,8 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         roomSummaryProvider = userSession.clientProxy.roomSummaryProvider
         
-        super.init(initialViewState: .init(userID: userSession.clientProxy.userID),
+        super.init(initialViewState: .init(userID: userSession.clientProxy.userID,
+                                           bindings: .init(filtersState: .init(appSettings: appSettings))),
                    mediaProvider: userSession.mediaProvider)
         
         userSession.clientProxy.userAvatarURLPublisher
@@ -366,7 +367,9 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                                                          title: L10n.leaveRoomAlertSelectNewOwnerTitle,
                                                          message: L10n.leaveRoomAlertSelectNewOwnerSubtitle,
                                                          primaryButton: .init(title: L10n.actionCancel, role: .cancel, action: nil),
-                                                         secondaryButton: .init(title: L10n.leaveRoomAlertSelectNewOwnerAction, role: .destructive, action: { [weak self] in self?.actionsSubject.send(.transferOwnership(roomIdentifier: roomID)) }))
+                                                         secondaryButton: .init(title: L10n.leaveRoomAlertSelectNewOwnerAction, role: .destructive) { [weak self] in
+                                                             self?.actionsSubject.send(.transferOwnership(roomIdentifier: roomID))
+                                                         })
                         return
                     }
                 }
