@@ -9,6 +9,9 @@
   import EmbeddedElementCall
 #endif
 
+import Foundation
+import SwiftUI
+
 // Common settings between app and NSE
 protocol CommonSettingsProtocol {
   var logLevel: LogLevel { get }
