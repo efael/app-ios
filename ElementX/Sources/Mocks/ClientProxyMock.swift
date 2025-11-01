@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,8 +15,10 @@ struct ClientProxyMockConfiguration {
     var userID: String = RoomMemberProxyMock.mockMe.userID
     var deviceID: String?
     var roomSummaryProvider: RoomSummaryProviderProtocol = RoomSummaryProviderMock(.init())
-    var joinedSpaceRooms: [SpaceRoomProxyProtocol] = []
+    var spaceServiceConfiguration: SpaceServiceProxyMock.Configuration = .init()
+    var roomPreviews: [RoomPreviewProxyProtocol]?
     var roomDirectorySearchProxy: RoomDirectorySearchProxyProtocol?
+    var overrides = Overrides()
     
     var recoveryState: SecureBackupRecoveryState = .enabled
     
@@ -25,6 +28,10 @@ struct ClientProxyMockConfiguration {
     var hideInviteAvatars = false
     
     var maxMediaUploadSize: UInt = 100 * 1024 * 1024
+    
+    class Overrides {
+        var joinedRoomIDs: Set<String> = []
+    }
 }
 
 enum ClientProxyMockError: Error {
@@ -48,14 +55,14 @@ extension ClientProxyMock {
         roomDirectorySearchProxyReturnValue = configuration.roomDirectorySearchProxy
         
         actionsPublisher = PassthroughSubject<ClientProxyAction, Never>().eraseToAnyPublisher()
-        loadingStatePublisher = CurrentValuePublisher<ClientProxyLoadingState, Never>(.notLoading)
-        verificationStatePublisher = CurrentValuePublisher<SessionVerificationState, Never>(.unknown)
+        loadingStatePublisher = .init(.notLoading)
+        verificationStatePublisher = .init(.unknown)
+        homeserverReachabilityPublisher = .init(.reachable)
         
-        userAvatarURLPublisher = CurrentValueSubject<URL?, Never>(nil).asCurrentValuePublisher()
+        userAvatarURLPublisher = .init(nil)
+        userDisplayNamePublisher = .init("User display name")
         
-        userDisplayNamePublisher = CurrentValueSubject<String?, Never>("User display name").asCurrentValuePublisher()
-        
-        ignoredUsersPublisher = CurrentValueSubject<[String]?, Never>([RoomMemberProxyMock].allMembers.map(\.userID)).asCurrentValuePublisher()
+        ignoredUsersPublisher = .init([RoomMemberProxyMock].allMembers.map(\.userID))
         
         notificationSettings = configuration.notificationSettings
         
@@ -65,6 +72,12 @@ extension ClientProxyMock {
         directRoomForUserIDReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         createDirectRoomWithExpectedRoomNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         createRoomNameTopicIsRoomPrivateIsKnockingOnlyUserIDsAvatarURLAliasLocalPartReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
+        canJoinRoomWithReturnValue = true
+        joinRoomViaClosure = { roomID, _ in
+            configuration.overrides.joinedRoomIDs.insert(roomID)
+            return .success(())
+        }
+        joinRoomAliasReturnValue = .success(())
         uploadMediaReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         loadUserDisplayNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
         setUserDisplayNameReturnValue = .failure(.sdkError(ClientProxyMockError.generic))
@@ -90,15 +103,39 @@ extension ClientProxyMock {
         secureBackupController = SecureBackupControllerMock(.init(recoveryState: configuration.recoveryState))
         resetIdentityReturnValue = .success(IdentityResetHandleSDKMock(.init()))
         
-        spaceService = SpaceServiceProxyMock(.init())
+        spaceService = SpaceServiceProxyMock(configuration.spaceServiceConfiguration)
         
         roomForIdentifierClosure = { [weak self] identifier in
             if let room = self?.roomSummaryProvider.roomListPublisher.value.first(where: { $0.id == identifier }) {
-                await .joined(JoinedRoomProxyMock(.init(id: room.id, name: room.name)))
-            } else if let spaceRoom = configuration.joinedSpaceRooms.first(where: { $0.id == identifier }) {
-                await .joined(JoinedRoomProxyMock(.init(id: spaceRoom.id, name: spaceRoom.name)))
+                let joinedRoomIDs = configuration.overrides.joinedRoomIDs
+                switch room.joinRequestType {
+                case .invite where !joinedRoomIDs.contains(room.id):
+                    let roomProxy = await InvitedRoomProxyMock(.init(id: room.id, name: room.name, isSpace: room.isSpace))
+                    return .invited(roomProxy)
+                case .knock where !joinedRoomIDs.contains(room.id):
+                    let roomProxy = await KnockedRoomProxyMock(.init(id: room.id, name: room.name))
+                    return .knocked(roomProxy)
+                default:
+                    let roomProxy = await JoinedRoomProxyMock(.init(id: room.id, name: room.name, isSpace: room.isSpace))
+                    roomProxy.loadOrFetchEventDetailsForReturnValue = .success(TimelineEventSDKMock())
+                    return .joined(roomProxy)
+                }
+            } else if let spaceRoomProxy = configuration.spaceServiceConfiguration.joinedSpaces.first(where: { $0.id == identifier }) {
+                let roomProxy = await JoinedRoomProxyMock(.init(id: spaceRoomProxy.id, name: spaceRoomProxy.name, isSpace: spaceRoomProxy.isSpace))
+                roomProxy.loadOrFetchEventDetailsForReturnValue = .success(TimelineEventSDKMock())
+                return .joined(roomProxy)
             } else {
-                nil
+                return nil
+            }
+        }
+        
+        if let roomPreviews = configuration.roomPreviews {
+            roomPreviewForIdentifierViaClosure = { roomID, _ in
+                if let preview = roomPreviews.first(where: { $0.info.id == roomID }) {
+                    .success(preview)
+                } else {
+                    .failure(.roomPreviewIsPrivate)
+                }
             }
         }
         

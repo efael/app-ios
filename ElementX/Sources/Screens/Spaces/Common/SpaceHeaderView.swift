@@ -1,4 +1,5 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -12,7 +13,7 @@ struct SpaceHeaderView: View {
     let spaceRoomProxy: SpaceRoomProxyProtocol
     let mediaProvider: MediaProviderProtocol?
     
-    var title: String { spaceRoomProxy.name ?? "" }
+    @State private var isPresentingTopic = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -22,24 +23,30 @@ struct SpaceHeaderView: View {
                 .accessibilityHidden(true)
             
             VStack(spacing: 8) {
-                Text(title)
+                Text(spaceRoomProxy.name)
                     .font(.compound.headingLGBold)
                     .foregroundStyle(.compound.textPrimary)
                     .multilineTextAlignment(.center)
                 
+                if let alias = spaceRoomProxy.canonicalAlias {
+                    CopyTextButton(content: alias)
+                }
+                
                 spaceDetails
                 
-                SpaceHeaderMembersView(heroes: spaceRoomProxy.heroes,
+                JoinedMembersBadgeView(heroes: spaceRoomProxy.heroes,
                                        joinedCount: spaceRoomProxy.joinedMembersCount,
                                        mediaProvider: mediaProvider)
             }
             
             if let topic = spaceRoomProxy.topic {
-                Text(topic)
-                    .font(.compound.bodyMD)
-                    .foregroundStyle(.compound.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                Button { isPresentingTopic = true } label: {
+                    Text(topic)
+                        .font(.compound.bodyMD)
+                        .foregroundStyle(.compound.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -52,11 +59,16 @@ struct SpaceHeaderView: View {
                 .fill(Color.compound.borderDisabled)
                 .frame(height: 1 / UIScreen.main.scale)
         }
+        .sheet(isPresented: $isPresentingTopic) {
+            if let topic = spaceRoomProxy.topic {
+                SpaceHeaderTopicSheetView(topic: topic)
+            }
+        }
     }
     
-    var spaceDetails: some View {
+    private var spaceDetails: some View {
         Label {
-            Text(L10n.screenSpaceListDetails(spaceDetailsVisibilityTitle, L10n.commonRooms(spaceRoomProxy.childrenCount)))
+            Text(spaceDetailsVisibilityTitle)
                 .font(.compound.bodyLG)
                 .foregroundStyle(.compound.textSecondary)
                 .multilineTextAlignment(.center)
@@ -66,89 +78,26 @@ struct SpaceHeaderView: View {
         }
     }
     
-    var spaceDetailsVisibilityTitle: String {
-        switch spaceRoomProxy.joinRule {
-        case .public:
-            L10n.commonPublicSpace
-        case .restricted(let rules), .knockRestricted(let rules):
-            // FIXME: Get this from the rule (falling back to a passed in parent??)
-            "<Parent name> space"
-        case .invite, .knock, .private, .custom, .none:
-            L10n.commonPrivateSpace
+    private var spaceDetailsVisibilityTitle: String {
+        switch spaceRoomProxy.visibility {
+        case .public: L10n.commonPublicSpace
+        case .private: L10n.commonPrivateSpace
+        case .restricted: L10n.commonSharedSpace
+        case .none: L10n.commonPrivateSpace
         }
     }
     
-    var spaceDetailsVisibilityIcon: KeyPath<CompoundIcons, Image> {
-        switch spaceRoomProxy.joinRule {
-        case .public:
-            \.public
-        case .restricted, .knockRestricted:
-            \.space
-        case .invite, .knock, .private, .custom, .none:
-            \.lock
+    private var spaceDetailsVisibilityIcon: KeyPath<CompoundIcons, Image> {
+        switch spaceRoomProxy.visibility {
+        case .public: \.public
+        case .private: \.lock
+        case .restricted: \.space
+        case .none: \.lock
         }
     }
 }
 
-import MatrixRustSDK
-
-struct SpaceHeaderMembersView: View {
-    let heroes: [UserProfileProxy]
-    let joinedCount: Int
-    
-    let mediaProvider: MediaProviderProtocol?
-    
-    var body: some View {
-        if heroes.isEmpty {
-            Label(title: title) {
-                CompoundIcon(\.userProfile, size: .small, relativeTo: .compound.bodyMD)
-                    .foregroundStyle(.compound.textSecondary)
-            }
-            .font(.compound.bodyMD)
-            .foregroundStyle(.compound.textSecondary)
-            .labelStyle(.custom(spacing: 4))
-            .padding(.trailing, 8)
-            .background(.compound.bgSubtleSecondary, in: Capsule())
-        } else {
-            Label(title: title) {
-                heroesFacePile
-            }
-            .font(.compound.bodyMD)
-            .foregroundStyle(.compound.textSecondary)
-            .labelStyle(.custom(spacing: 6))
-        }
-    }
-    
-    func title() -> Text {
-        Text("\(joinedCount)")
-    }
-    
-    var heroesFacePile: some View {
-        HStack(spacing: -8) {
-            ForEach(heroes.prefix(3).reversed()) { hero in
-                LoadableAvatarImage(url: hero.avatarURL,
-                                    name: hero.displayName,
-                                    contentID: hero.userID,
-                                    avatarSize: .user(on: .spaceHeader),
-                                    mediaProvider: mediaProvider)
-                    .mask {
-                        Circle()
-                            .fill(Color.white)
-                            .overlay {
-                                if hero != heroes.first {
-                                    Circle()
-                                        .inset(by: -2)
-                                        .fill(Color.black)
-                                        .offset(x: 12)
-                                }
-                            }
-                            .compositingGroup()
-                            .luminanceToAlpha()
-                    }
-            }
-        }
-    }
-}
+// MARK: - Previews
 
 struct SpaceHeaderView_Previews: PreviewProvider, TestablePreview {
     static let mediaProvider = MediaProviderMock(configuration: .init())
@@ -177,6 +126,7 @@ struct SpaceHeaderView_Previews: PreviewProvider, TestablePreview {
                                      childrenCount: 20,
                                      joinedMembersCount: 78,
                                      topic: "Description of the space goes right here.",
+                                     canonicalAlias: "#space:matrix.org",
                                      joinRule: .public)),
             SpaceRoomProxyMock(.init(id: "!space3:matrix.org",
                                      name: "Subspace",
@@ -190,6 +140,7 @@ struct SpaceHeaderView_Previews: PreviewProvider, TestablePreview {
                                              "Sem amet enim habitant nibh augue mauris.",
                                              "Interdum mauris ultrices tincidunt proin morbi erat aenean risus nibh.",
                                              "Diam amet sit fermentum vulputate faucibus."].joined(separator: " "),
+                                     canonicalAlias: "#subspace:matrix.org",
                                      joinRule: .knockRestricted(rules: [.roomMembership(roomId: "")])))
         ]
     }

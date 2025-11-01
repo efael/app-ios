@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -32,12 +33,9 @@ struct DeveloperOptionsScreen: View {
                 }
             }
             
-            Section("General") {
-                Toggle(isOn: $context.threadsEnabled) {
-                    Text("Threads")
-                }
-                Toggle(isOn: $context.spacesEnabled) {
-                    Text("Spaces")
+            Section("Spaces") {
+                Toggle(isOn: $context.spaceSettingsEnabled) {
+                    Text("Space settings")
                 }
             }
             
@@ -56,6 +54,20 @@ struct DeveloperOptionsScreen: View {
                 
                 Toggle(isOn: $context.lowPriorityFilterEnabled) {
                     Text("Low priority filter")
+                }
+                
+                Toggle(isOn: $context.latestEventSorterEnabled) {
+                    Text("Latest event sorter")
+                    Text("Requires app reboot")
+                }
+            }
+            
+            Section("Timeline") {
+                Toggle(isOn: $context.linkPreviewsEnabled) {
+                    Text("Link previews")
+                    Text("Follows the timeline media visibility settings.")
+                    Text("Can leak the device IP address when loading link metadata.")
+                        .foregroundStyle(.compound.textCriticalPrimary)
                 }
             }
                         
@@ -118,13 +130,6 @@ struct DeveloperOptionsScreen: View {
                     Text("🥳")
                         .frame(maxWidth: .infinity)
                         .alignmentGuide(.listRowSeparatorLeading) { _ in 0 } // Fix separator alignment
-                }
-                
-                Button {
-                    fatalError("This crash is a test.")
-                } label: {
-                    Text("💥")
-                        .frame(maxWidth: .infinity)
                 }
             }
 

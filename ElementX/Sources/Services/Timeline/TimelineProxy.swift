@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -135,10 +136,8 @@ final class TimelineProxy: TimelineProxyProtocol {
         }
         
         // This extra check is necessary as detached timelines don't support subscribing to pagination status.
-        // We need it to make sure we send a valid status after a failure.
         guard subject.value == .idle else {
-            MXLog.error("Attempting to paginate \(direction.rawValue) when already at the end.")
-            return .failure(.failedPaginatingEndReached)
+            return .success(())
         }
         
         MXLog.info("Paginating \(direction.rawValue)")
@@ -360,7 +359,7 @@ final class TimelineProxy: TimelineProxyProtocol {
     
     func sendVoiceMessage(url: URL,
                           audioInfo: AudioInfo,
-                          waveform: [UInt16],
+                          waveform: [Float],
                           requestHandle: @MainActor (SendAttachmentJoinHandleProtocol) -> Void) async -> Result<Void, TimelineProxyError> {
         MXLog.info("Sending voice message")
         
@@ -467,7 +466,7 @@ final class TimelineProxy: TimelineProxyProtocol {
         MXLog.info("Toggling reaction \(reaction) for event: \(eventOrTransactionID)")
         
         do {
-            try await timeline.toggleReaction(itemId: eventOrTransactionID.rustValue, key: reaction)
+            _ = try await timeline.toggleReaction(itemId: eventOrTransactionID.rustValue, key: reaction)
             MXLog.info("Finished toggling reaction for event: \(eventOrTransactionID)")
             return .success(())
         } catch {

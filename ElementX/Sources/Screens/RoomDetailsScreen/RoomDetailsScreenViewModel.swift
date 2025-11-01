@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -49,7 +50,6 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
          userIndicatorController: UserIndicatorControllerProtocol,
          notificationSettingsProxy: NotificationSettingsProxyProtocol,
          attributedStringBuilder: AttributedStringBuilderProtocol,
-         appMediator: AppMediatorProtocol,
          appSettings: AppSettings) {
         self.roomProxy = roomProxy
         self.userSession = userSession
@@ -79,7 +79,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
             state.reportRoomEnabled = await userSession.clientProxy.isReportRoomSupported
         }
         
-        appMediator.networkMonitor.reachabilityPublisher
+        userSession.clientProxy.homeserverReachabilityPublisher
             .filter { $0 == .reachable }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -169,6 +169,11 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
     // MARK: - Private
     
     private func processTapToLeave() {
+        guard !roomProxy.infoPublisher.value.isSpace else {
+            Task { await processLeaveSpace() }
+            return
+        }
+        
         guard state.joinedMembersCount > 1 else {
             state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
                                                                    isDM: roomProxy.isDirectOneToOneRoom,
@@ -178,7 +183,7 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         
         if !roomProxy.isDirectOneToOneRoom, state.accountOwner?.role.isOwner == true {
             var isLastOwner = true
-            for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID {
+            for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID && member.membership == .join {
                 if member.role.isOwner {
                     isLastOwner = false
                     break
@@ -200,6 +205,16 @@ class RoomDetailsScreenViewModel: RoomDetailsScreenViewModelType, RoomDetailsScr
         state.bindings.leaveRoomAlertItem = LeaveRoomAlertItem(roomID: roomProxy.id,
                                                                isDM: roomProxy.isDirectOneToOneRoom,
                                                                state: roomProxy.infoPublisher.value.isPrivate ?? true ? .private : .public)
+    }
+    
+    private func processLeaveSpace() async {
+        switch await userSession.clientProxy.spaceService.leaveSpace(spaceID: roomProxy.id) {
+        case .success:
+            // TODO: Handle leave space
+            break
+        case .failure(let failure):
+            userIndicatorController.submitIndicator(.init(title: L10n.errorUnknown))
+        }
     }
     
     private func setupRoomSubscription() {

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -52,7 +53,7 @@ struct TimelineItemMenu: View {
             }
         }
         .accessibilityIdentifier(A11yIdentifiers.roomScreen.timelineItemActionMenu)
-        .presentationPage()
+        .backportPresentationSizingPage()
         .presentationDetents([.medium, .large])
         .presentationBackground(Color.compound.bgCanvasDefault)
         .presentationDragIndicator(.visible)
@@ -247,17 +248,6 @@ private extension EncryptionAuthenticity {
         switch color {
         case .red: .compound.textCriticalPrimary
         case .gray: .compound.textSecondary
-        }
-    }
-}
-
-private extension View {
-    /// Uses the old page style modal so that on iPadOS 18 the presentation detents have no effect.
-    @ViewBuilder func presentationPage() -> some View {
-        if #available(iOS 18.0, *) {
-            presentationSizing(.page)
-        } else {
-            self
         }
     }
 }

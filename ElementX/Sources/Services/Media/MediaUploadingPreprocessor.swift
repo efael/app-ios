@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -316,9 +317,15 @@ struct MediaUploadingPreprocessor {
         let metadataKeysToRemove = [kCGImagePropertyGPSDictionary: kCFNull]
         
         let data = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(data as CFMutableData, type.identifier as CFString, count, nil) else {
+        
+        // Certain type identifiers cannot be used for image destinations, fall
+        // back to `public.jpeg` when that's the case
+        let destination = CGImageDestinationCreateWithData(data as CFMutableData, type.identifier as CFString, count, nil) ??
+            CGImageDestinationCreateWithData(data as CFMutableData, UTType.jpeg.identifier as CFString, count, nil)
+        guard let destination else {
             throw .failedStrippingLocationData
         }
+        
         CGImageDestinationAddImageFromSource(destination, imageSource, 0, metadataKeysToRemove as NSDictionary)
         CGImageDestinationFinalize(destination)
         

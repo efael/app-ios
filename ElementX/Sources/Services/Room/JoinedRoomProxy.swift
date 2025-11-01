@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -186,6 +187,16 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
             return .success(timeline)
         } catch {
             MXLog.error("Unexpected error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func loadOrFetchEventDetails(for eventID: String) async -> Result<TimelineEvent, RoomProxyError> {
+        do {
+            let event = try await room.loadOrFetchEvent(eventId: eventID)
+            return .success(event)
+        } catch {
+            MXLog.error("Failed fetching the event with id: \(eventID) with error: \(error)")
             return .failure(.sdkError(error))
         }
     }
@@ -637,6 +648,27 @@ class JoinedRoomProxy: JoinedRoomProxyProtocol {
     
     func elementCallWidgetDriver(deviceID: String) -> ElementCallWidgetDriverProtocol {
         ElementCallWidgetDriver(room: room, deviceID: deviceID)
+    }
+    
+    func declineCall(notificationID: String) async -> Result<Void, RoomProxyError> {
+        do {
+            try await room.declineCall(rtcNotificationEventId: notificationID)
+            return .success(())
+        } catch {
+            MXLog.error("Failed to decline rtc notification \(notificationID) with error: \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    /// Subscribe to call decline events from that rtc notification event.
+    func subscribeToCallDeclineEvents(rtcNotificationEventID: String, listener: CallDeclineListener) -> Result<TaskHandle, RoomProxyError> {
+        do {
+            let handle = try room.subscribeToCallDeclineEvents(rtcNotificationEventId: rtcNotificationEventID, listener: listener)
+            return .success(handle)
+        } catch {
+            MXLog.error("Failed observing rtc decline with error: \(error)")
+            return .failure(.sdkError(error))
+        }
     }
     
     // MARK: - Permalinks

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -133,7 +134,9 @@ enum UserAvatarSizeOnScreen {
 enum RoomAvatarSizeOnScreen {
     case chats
     case spaces
+    case spaceSettings
     case timeline
+    case leaveSpace
     case messageForwarding
     case globalSearch
     case roomSelection
@@ -146,9 +149,9 @@ enum RoomAvatarSizeOnScreen {
 
     var value: CGFloat {
         switch self {
-        case .chats, .spaces:
+        case .chats, .spaces, .spaceSettings:
             return 52
-        case .timeline:
+        case .timeline, .leaveSpace:
             return 32
         case .notificationSettings:
             return 30
@@ -165,7 +168,7 @@ enum RoomAvatarSizeOnScreen {
         case .details:
             return 96
         case .joinRoom:
-            return 96
+            return 64
         case .spaceHeader:
             return 64
         }

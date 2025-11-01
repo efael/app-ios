@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -41,6 +42,7 @@ class TimelineInteractionHandler {
     private let appSettings: AppSettings
     private let analyticsService: AnalyticsService
     private let emojiProvider: EmojiProviderProtocol
+    private let linkMetadataProvider: LinkMetadataProviderProtocol
     private let timelineControllerFactory: TimelineControllerFactoryProtocol
     private let pollInteractionHandler: PollInteractionHandlerProtocol
     
@@ -67,6 +69,7 @@ class TimelineInteractionHandler {
          appSettings: AppSettings,
          analyticsService: AnalyticsService,
          emojiProvider: EmojiProviderProtocol,
+         linkMetadataProvider: LinkMetadataProviderProtocol,
          timelineControllerFactory: TimelineControllerFactoryProtocol) {
         self.roomProxy = roomProxy
         self.timelineController = timelineController
@@ -78,6 +81,7 @@ class TimelineInteractionHandler {
         self.appSettings = appSettings
         self.analyticsService = analyticsService
         self.emojiProvider = emojiProvider
+        self.linkMetadataProvider = linkMetadataProvider
         self.timelineControllerFactory = timelineControllerFactory
         
         pollInteractionHandler = PollInteractionHandler(analyticsService: analyticsService,
@@ -590,6 +594,7 @@ class TimelineInteractionHandler {
                                                       appSettings: appSettings,
                                                       analyticsService: analyticsService,
                                                       emojiProvider: emojiProvider,
+                                                      linkMetadataProvider: linkMetadataProvider,
                                                       timelineControllerFactory: timelineControllerFactory)
             
             return .displayMediaPreview(item: item, timelineViewModel: .new(timelineViewModel))

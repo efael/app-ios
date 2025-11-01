@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,8 +10,15 @@ import Combine
 import MatrixRustSDK
 
 class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
+    var id: String { spaceRoomProxyPublisher.value.id }
+    
     private let spaceRoomList: SpaceRoomListProtocol
-    let spaceRoomProxy: SpaceRoomProxyProtocol
+    
+    private var spaceRoomProxyHandle: TaskHandle?
+    private let spaceRoomProxySubject: CurrentValueSubject<SpaceRoomProxyProtocol, Never>
+    var spaceRoomProxyPublisher: CurrentValuePublisher<SpaceRoomProxyProtocol, Never> {
+        spaceRoomProxySubject.asCurrentValuePublisher()
+    }
     
     private var spaceRoomsHandle: TaskHandle?
     private let spaceRoomsSubject = CurrentValueSubject<[SpaceRoomProxyProtocol], Never>([])
@@ -21,9 +29,11 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
     private let paginationStateHandle: TaskHandle
     let paginationStatePublisher: CurrentValuePublisher<SpaceRoomListPaginationState, Never>
     
-    init(_ spaceRoomList: SpaceRoomListProtocol, spaceRoomProxy: SpaceRoomProxyProtocol) {
+    init(_ spaceRoomList: SpaceRoomListProtocol) throws {
+        guard let spaceRoom = spaceRoomList.space() else { throw SpaceRoomListProxyError.missingSpace }
+        
         self.spaceRoomList = spaceRoomList
-        self.spaceRoomProxy = spaceRoomProxy
+        spaceRoomProxySubject = .init(SpaceRoomProxy(spaceRoom: spaceRoom))
         
         let paginationStateSubject = CurrentValueSubject<SpaceRoomListPaginationState, Never>(spaceRoomList.paginationState())
         paginationStatePublisher = paginationStateSubject.asCurrentValuePublisher()
@@ -34,6 +44,11 @@ class SpaceRoomListProxy: SpaceRoomListProxyProtocol {
         
         spaceRoomsHandle = spaceRoomList.subscribeToRoomUpdate(listener: SDKListener { [weak self] updates in
             self?.handleUpdates(updates)
+        })
+        
+        spaceRoomProxyHandle = spaceRoomList.subscribeToSpaceUpdates(listener: SDKListener { [weak self] spaceRoom in
+            guard let spaceRoom else { return }
+            self?.spaceRoomProxySubject.send(SpaceRoomProxy(spaceRoom: spaceRoom))
         })
     }
     

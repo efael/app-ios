@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -12,13 +13,13 @@ import Combine
 
 @MainActor
 class UserSessionFlowCoordinatorTests: XCTestCase {
-    var clientProxy: ClientProxyMock!
-    var timelineControllerFactory: TimelineControllerFactoryMock!
     var userSessionFlowCoordinator: UserSessionFlowCoordinator!
     var rootCoordinator: NavigationRootCoordinator!
-    var notificationManager: NotificationManagerMock!
+    var userIndicatorController: UserIndicatorControllerMock!
     let stateMachineFactory = PublishedStateMachineFactory()
     
+    let networkReachabilitySubject: CurrentValueSubject<NetworkMonitorReachability, Never> = .init(.reachable)
+    let homeserverReachabilitySubject: CurrentValueSubject<NetworkMonitorReachability, Never> = .init(.reachable)
     var cancellables = Set<AnyCancellable>()
     
     var tabCoordinator: NavigationTabCoordinator<UserSessionFlowCoordinator.HomeTab>? { rootCoordinator?.rootCoordinator as? NavigationTabCoordinator }
@@ -28,24 +29,31 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
     
     override func setUp() async throws {
         cancellables.removeAll()
-        clientProxy = ClientProxyMock(.init(userID: "hi@bob", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
-        timelineControllerFactory = TimelineControllerFactoryMock(.init())
         
         rootCoordinator = NavigationRootCoordinator()
         
-        notificationManager = NotificationManagerMock()
+        let clientProxy = ClientProxyMock(.init(userID: "hi@bob", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
+        clientProxy.homeserverReachabilityPublisher = homeserverReachabilitySubject.asCurrentValuePublisher()
+        
+        let networkMonitor = NetworkMonitorMock.default
+        networkMonitor.reachabilityPublisher = networkReachabilitySubject.asCurrentValuePublisher()
+        let appMediator = AppMediatorMock.default
+        appMediator.networkMonitor = networkMonitor
+        
+        userIndicatorController = UserIndicatorControllerMock()
         
         let flowParameters = CommonFlowParameters(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                   bugReportService: BugReportServiceMock(.init()),
                                                   elementCallService: ElementCallServiceMock(.init()),
-                                                  timelineControllerFactory: timelineControllerFactory,
+                                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()),
                                                   emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
-                                                  appMediator: AppMediatorMock.default,
+                                                  linkMetadataProvider: LinkMetadataProvider(),
+                                                  appMediator: appMediator,
                                                   appSettings: ServiceLocator.shared.settings,
                                                   appHooks: AppHooks(),
                                                   analytics: ServiceLocator.shared.analytics,
-                                                  userIndicatorController: UserIndicatorControllerMock(),
-                                                  notificationManager: notificationManager,
+                                                  userIndicatorController: userIndicatorController,
+                                                  notificationManager: NotificationManagerMock(),
                                                   stateMachineFactory: stateMachineFactory)
         
         userSessionFlowCoordinator = UserSessionFlowCoordinator(isNewLogin: false,
@@ -55,6 +63,8 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
         
         userSessionFlowCoordinator.start()
     }
+    
+    // MARK: Navigation
     
     func testInitialState() async throws {
         XCTAssertNotNil(chatsSplitCoordinator)
@@ -67,7 +77,7 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
     }
     
     func testRoomPresentation() async throws {
-        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(detailState: .room(roomID: "1")))
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNotNil(detailCoordinator)
     }
@@ -77,14 +87,14 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
         XCTAssertTrue((tabCoordinator?.sheetCoordinator as? NavigationStackCoordinator)?.rootCoordinator is SettingsScreenCoordinator)
         XCTAssertNil(detailCoordinator)
         
-        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(detailState: .room(roomID: "1")))
         XCTAssertNil((tabCoordinator?.sheetCoordinator))
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNotNil(detailCoordinator)
     }
     
     func testChildRoomPresentation() async throws {
-        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        try await process(route: .room(roomID: "1", via: []), expectedChatsState: .roomList(detailState: .room(roomID: "1")))
         let detailNavigationStack = try XCTUnwrap(detailNavigationStack, "There must be a navigation stack.")
         XCTAssertTrue(detailNavigationStack.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNotNil(detailCoordinator)
@@ -112,14 +122,14 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
     }
     
     func testShareMediaRouteWithRoom() async throws {
-        try await process(route: .event(eventID: "1", roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        try await process(route: .event(eventID: "1", roomID: "1", via: []), expectedChatsState: .roomList(detailState: .room(roomID: "1")))
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNil(tabCoordinator?.sheetCoordinator)
         XCTAssertNil(chatsSplitCoordinator?.sheetCoordinator)
 
         let sharePayload: ShareExtensionPayload = .mediaFiles(roomID: "2", mediaFiles: [.init(url: .picturesDirectory, suggestedName: nil)])
         try await process(route: .share(sharePayload),
-                          expectedChatsState: .roomList(roomListSelectedRoomID: "2"))
+                          expectedChatsState: .roomList(detailState: .room(roomID: "2")))
 
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNil(tabCoordinator?.sheetCoordinator)
@@ -140,18 +150,63 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
     }
     
     func testShareTextRouteWithRoom() async throws {
-        try await process(route: .event(eventID: "1", roomID: "1", via: []), expectedChatsState: .roomList(roomListSelectedRoomID: "1"))
+        try await process(route: .event(eventID: "1", roomID: "1", via: []), expectedChatsState: .roomList(detailState: .room(roomID: "1")))
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNil(tabCoordinator?.sheetCoordinator)
         XCTAssertNil(chatsSplitCoordinator?.sheetCoordinator)
 
         let sharePayload: ShareExtensionPayload = .text(roomID: "2", text: "Important text")
         try await process(route: .share(sharePayload),
-                          expectedChatsState: .roomList(roomListSelectedRoomID: "2"))
+                          expectedChatsState: .roomList(detailState: .room(roomID: "2")))
 
         XCTAssertTrue(detailNavigationStack?.rootCoordinator is RoomScreenCoordinator)
         XCTAssertNil(tabCoordinator?.sheetCoordinator)
         XCTAssertNil(chatsSplitCoordinator?.sheetCoordinator, "The media upload sheet shouldn't be shown when sharing text.")
+    }
+    
+    // MARK: Indicators
+    
+    func testReachabilityIndicators() async throws {
+        // Given a flow in its initial state.
+        try await Task.sleep(for: .milliseconds(100))
+        
+        // Then no reachability indicators should be shown.
+        XCTAssertFalse(userIndicatorController.submitIndicatorDelayCalled)
+        XCTAssertEqual(retractReachabilityIndicatorCallsCount, 1) // The initial state removes the indicator.
+        
+        // When the homeserver becomes unreachable.
+        homeserverReachabilitySubject.send(.unreachable)
+        try await Task.sleep(for: .milliseconds(100))
+        
+        // Then a server unreachable indicator should be shown.
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayCallsCount, 1)
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayReceivedArguments?.indicator.title, L10n.commonServerUnreachable)
+        XCTAssertEqual(retractReachabilityIndicatorCallsCount, 1)
+        
+        // When the network also becomes unreachable.
+        networkReachabilitySubject.send(.unreachable)
+        try await Task.sleep(for: .milliseconds(100))
+        
+        // Then the server unreachable indicator should be replaced with an offline indicator.
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayCallsCount, 2)
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayReceivedArguments?.indicator.title, L10n.commonOffline)
+        XCTAssertEqual(retractReachabilityIndicatorCallsCount, 1)
+        
+        // When the homeserver becomes reachable again.
+        homeserverReachabilitySubject.send(.reachable)
+        try await Task.sleep(for: .milliseconds(100))
+        
+        // Then the indicator should be hidden even if the network isn't reachable.
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayCallsCount, 2)
+        XCTAssertEqual(retractReachabilityIndicatorCallsCount, 2)
+        
+        // When the network becomes reachable again.
+        networkReachabilitySubject.send(.reachable)
+        try await Task.sleep(for: .milliseconds(100))
+        
+        // Then nothing else should happen.
+        XCTAssertEqual(userIndicatorController.submitIndicatorDelayCallsCount, 2)
+        XCTAssertEqual(retractReachabilityIndicatorCallsCount, 3)
     }
     
     // MARK: - Helpers
@@ -178,5 +233,13 @@ class UserSessionFlowCoordinatorTests: XCTestCase {
         userSessionFlowCoordinator.handleAppRoute(route, animated: true)
         try await deferredUserSession?.fulfill()
         try await deferredChatsState?.fulfill()
+    }
+    
+    /// Other services retract indicators, so this filters based on the reachability ID.
+    private var retractReachabilityIndicatorCallsCount: Int {
+        userIndicatorController
+            .retractIndicatorWithIdReceivedInvocations
+            .filter { $0 == "io.element.elementx.reachability.notification" }
+            .count
     }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,6 +15,7 @@ struct InvitedRoomProxyMockConfiguration {
     var id = UUID().uuidString
     var name: String?
     var avatarURL: URL?
+    var isSpace = false
     var members: [RoomMemberProxyMock] = .allMembers
     var inviter: RoomMemberProxyMock = .mockAlice
 }
@@ -44,7 +46,7 @@ extension RoomInfoProxyMock {
         avatarURL = configuration.avatarURL
         
         isDirect = false
-        isSpace = false
+        isSpace = configuration.isSpace
         successor = nil
         isFavourite = false
         canonicalAlias = nil
@@ -80,7 +82,6 @@ private extension RoomMember {
                   membership: proxy.membership,
                   isNameAmbiguous: proxy.disambiguatedDisplayName != proxy.displayName,
                   powerLevel: proxy.powerLevel.rustPowerLevel,
-                  normalizedPowerLevel: proxy.powerLevel.rustPowerLevel,
                   isIgnored: proxy.isIgnored,
                   suggestedRoleForPowerLevel: proxy.role.rustRole,
                   membershipChangeReason: proxy.membershipChangeReason)

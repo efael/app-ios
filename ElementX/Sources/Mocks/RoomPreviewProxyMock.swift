@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -95,5 +96,19 @@ extension RoomPreviewProxyMock {
         roomMembershipDetails.ownRoomMember = mockMember
         
         underlyingOwnMembershipDetails = roomMembershipDetails
+    }
+    
+    convenience init(spaceRoomProxy: SpaceRoomProxyProtocol) {
+        self.init(Configuration(roomID: spaceRoomProxy.id,
+                                canonicalAlias: spaceRoomProxy.canonicalAlias ?? "",
+                                name: spaceRoomProxy.name,
+                                topic: spaceRoomProxy.topic ?? "",
+                                avatarURL: spaceRoomProxy.avatarURL?.absoluteString ?? "",
+                                numJoinedMembers: UInt64(spaceRoomProxy.joinedMembersCount),
+                                numActiveMembers: UInt64(spaceRoomProxy.joinedMembersCount),
+                                roomType: spaceRoomProxy.isSpace ? .space : .room,
+                                membership: nil,
+                                joinRule: spaceRoomProxy.joinRule ?? .restricted(rules: []),
+                                isDirect: false))
     }
 }

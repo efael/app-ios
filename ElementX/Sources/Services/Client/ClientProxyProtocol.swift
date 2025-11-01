@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -80,6 +81,8 @@ protocol ClientProxyProtocol: AnyObject {
     
     var verificationStatePublisher: CurrentValuePublisher<SessionVerificationState, Never> { get }
     
+    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> { get }
+    
     var userID: String { get }
 
     var deviceID: String? { get }
@@ -138,6 +141,8 @@ protocol ClientProxyProtocol: AnyObject {
     func stopSync()
     
     func stopSync(completion: (() -> Void)?) // Hopefully this will become async once we get SE-0371.
+    
+    func expireSyncSessions() async
         
     func accountURL(action: AccountManagementAction) async -> URL?
     
@@ -160,6 +165,8 @@ protocol ClientProxyProtocol: AnyObject {
     func knockRoom(_ roomID: String, via: [String], message: String?) async -> Result<Void, ClientProxyError>
     
     func knockRoomAlias(_ roomAlias: String, message: String?) async -> Result<Void, ClientProxyError>
+    
+    func canJoinRoom(with rules: [AllowRule]) -> Bool
     
     func uploadMedia(_ media: MediaInfo) async -> Result<String, ClientProxyError>
     

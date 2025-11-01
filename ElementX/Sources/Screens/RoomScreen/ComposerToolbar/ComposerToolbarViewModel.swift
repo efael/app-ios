@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -493,7 +494,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 attributedString = NSMutableAttributedString(string: string, attributes: [.link: URL(string: urlString) as Any])
             }
             
-            attributedStringBuilder.detectPermalinks(attributedString)
+            attributedStringBuilder.addMatrixEntityPermalinkAttributesTo(attributedString)
             
             // In RTE mentions don't need to be handled as links
             attributedString.removeAttribute(.link, range: NSRange(location: 0, length: attributedString.length))
@@ -606,7 +607,7 @@ final class ComposerToolbarViewModel: ComposerToolbarViewModelType, ComposerTool
                 attributedString.addAttribute(.MatrixAllUsersMention, value: true, range: match.range)
             }
             
-            attributedStringBuilder.detectPermalinks(attributedString)
+            attributedStringBuilder.addMatrixEntityPermalinkAttributesTo(attributedString)
             
             state.bindings.plainComposerText = attributedString
         }

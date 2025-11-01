@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -50,7 +51,9 @@ struct TimelineItemMenuActionProvider {
 
         if item.canBeRepliedTo, canCurrentUserSendMessage {
             if let messageItem = item as? EventBasedMessageTimelineItemProtocol {
-                actions.append(.reply(isThread: messageItem.properties.isThreaded))
+                // If threads are enabled we will have the dedicated `replyInThread` action
+                // so there is no need to make the normal reply use the thread.
+                actions.append(.reply(isThread: areThreadsEnabled ? false : messageItem.properties.isThreaded))
             } else {
                 actions.append(.reply(isThread: false))
             }

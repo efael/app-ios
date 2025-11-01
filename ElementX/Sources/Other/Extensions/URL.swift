@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -114,49 +115,22 @@ extension URL {
         }
         
         MXLog.info("Found \(String(describing: proxies?.count)) proxies, using the first one.")
-    
-        if proxyType == kCFProxyTypeAutoConfigurationURL as String {
-            MXLog.info("Found proxy auto configuration")
+        MXLog.info("Proxy type is \(proxyType)")
             
-            if let pacURL = firstProxy[kCFProxyAutoConfigurationURLKey] as? String {
-                MXLog.info("Retrieved global PAC URL: \(pacURL)")
-                return pacURL
-            } else {
-                MXLog.info("Failed retrieving PAC URL")
-            }
-        } else {
-            MXLog.info("Proxy type found as \(proxyType)")
-            
-            guard let host = firstProxy[kCFProxyHostNameKey] as? String else {
-                MXLog.error("Found proxy with invalid host name")
-                return nil
-            }
-            
-            let port = firstProxy[kCFProxyPortNumberKey] as? Int
-            
-            let scheme: String? = if proxyType == kCFProxyTypeHTTP as String {
-                "http"
-            } else if proxyType == kCFProxyTypeHTTPS as String {
-                "https"
-            } else if proxyType == kCFProxyTypeSOCKS as String {
-                "socks"
-            } else {
-                nil
-            }
-            
-            var components = URLComponents()
-            components.scheme = scheme
-            components.host = host
-            components.port = port
-            
-            MXLog.info("Found proxy components: \(String(describing: scheme)), \(host), \(String(describing: port))")
-            
-            MXLog.info("Retrieved global proxy: \(String(describing: components.url))")
-            
-            return components.url?.absoluteString
+        guard let host = firstProxy[kCFProxyHostNameKey] as? String else {
+            MXLog.error("Found proxy with invalid host name")
+            return nil
         }
-    
-        return nil
+        
+        let port = firstProxy[kCFProxyPortNumberKey] as? Int
+        
+        MXLog.info("Found proxy host: \(host), port: \(String(describing: port))")
+        
+        if let port {
+            return "\(host):\(port)"
+        } else {
+            return host
+        }
     }
     
     // MARK: Mocks

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -13,9 +14,11 @@ import WysiwygComposer
 struct ThreadTimelineScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let roomProxy: JoinedRoomProxyProtocol
+    let focussedEventID: String?
     let timelineController: TimelineControllerProtocol
     let mediaPlayerProvider: MediaPlayerProviderProtocol
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let completionSuggestionService: CompletionSuggestionServiceProtocol
     let appMediator: AppMediatorProtocol
     let appSettings: AppSettings
@@ -54,9 +57,10 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     init(parameters: ThreadTimelineScreenCoordinatorParameters) {
         self.parameters = parameters
         
-        viewModel = ThreadTimelineScreenViewModel(roomProxy: parameters.roomProxy)
+        viewModel = ThreadTimelineScreenViewModel(roomProxy: parameters.roomProxy, userSession: parameters.userSession)
         
         timelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
+                                              focussedEventID: parameters.focussedEventID,
                                               timelineController: parameters.timelineController,
                                               userSession: parameters.userSession,
                                               mediaPlayerProvider: parameters.mediaPlayerProvider,
@@ -65,6 +69,7 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
                                               appSettings: parameters.appSettings,
                                               analyticsService: parameters.analytics,
                                               emojiProvider: parameters.emojiProvider,
+                                              linkMetadataProvider: parameters.linkMetadataProvider,
                                               timelineControllerFactory: parameters.timelineControllerFactory)
         
         let wysiwygViewModel = WysiwygComposerViewModel(minHeight: ComposerConstant.minHeight,
@@ -84,6 +89,16 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
     }
     
     func start() {
+        viewModel.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.presentMessageForwarding(forwardingItem: forwardingItem))
+                }
+            }
+            .store(in: &cancellables)
+        
         timelineViewModel.actions
             .sink { [weak self] action in
                 guard let self else { return }
@@ -152,5 +167,9 @@ final class ThreadTimelineScreenCoordinator: CoordinatorProtocol {
         return AnyView(ThreadTimelineScreen(context: viewModel.context,
                                             timelineContext: timelineViewModel.context,
                                             composerToolbar: composerToolbar))
+    }
+    
+    func focusOnEvent(eventID: String) {
+        Task { await timelineViewModel.focusOnEvent(eventID: eventID) }
     }
 }

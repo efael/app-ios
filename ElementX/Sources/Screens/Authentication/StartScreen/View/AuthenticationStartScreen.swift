@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -62,23 +63,25 @@ struct AuthenticationStartScreen: View {
             if verticalSizeClass == .regular {
                 Spacer()
                 
-                AuthenticationStartLogo(isOnGradient: true)
+                AuthenticationStartLogo(hideBrandChrome: context.viewState.hideBrandChrome)
             }
             
             Spacer()
             
-            VStack(spacing: 8) {
-                Text(L10n.screenOnboardingWelcomeTitle)
-                    .font(.compound.headingLGBold)
-                    .foregroundColor(.compound.textPrimary)
-                    .multilineTextAlignment(.center)
-                Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
-                    .font(.compound.bodyLG)
-                    .foregroundColor(.compound.textSecondary)
-                    .multilineTextAlignment(.center)
+            if !context.viewState.hideBrandChrome {
+                VStack(spacing: 8) {
+                    Text(L10n.screenOnboardingWelcomeTitle)
+                        .font(.compound.headingLGBold)
+                        .foregroundColor(.compound.textPrimary)
+                        .multilineTextAlignment(.center)
+                    Text(L10n.screenOnboardingWelcomeMessage(InfoPlistReader.main.productionAppName))
+                        .font(.compound.bodyLG)
+                        .foregroundColor(.compound.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .padding()
-            .fixedSize(horizontal: false, vertical: true)
             
             Spacer()
         }

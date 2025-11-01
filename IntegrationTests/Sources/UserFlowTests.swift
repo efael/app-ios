@@ -1,5 +1,6 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -60,7 +61,7 @@ class UserFlowTests: XCTestCase {
         tapOnBackButton("Chats")
         
         // Cancel initial the room search
-        let searchCancelButton = app.buttons["Cancel"].firstMatch
+        let searchCancelButton = app.buttons["Close"].firstMatch
         XCTAssertTrue(searchCancelButton.waitForExistence(timeout: 10.0))
         searchCancelButton.tap(.center)
     }
@@ -77,7 +78,7 @@ class UserFlowTests: XCTestCase {
         sleep(10) // Wait for the message to be sent
         
         // Switch to the rich text editor
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerTextFormatting)
         
         composerTextField = app.textViews[A11yIdentifiers.roomScreen.messageComposer].firstMatch
@@ -95,7 +96,7 @@ class UserFlowTests: XCTestCase {
     }
         
     private func checkPhotoSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerPhotoLibrary)
         
         sleep(10) // Wait for the picker to load
@@ -113,7 +114,7 @@ class UserFlowTests: XCTestCase {
     }
     
     private func checkDocumentSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerDocuments)
         
         sleep(10) // Wait for the picker to load
@@ -122,7 +123,7 @@ class UserFlowTests: XCTestCase {
     }
     
     private func checkLocationSharing() {
-        tapOnMenu(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
+        tapOnButton(A11yIdentifiers.roomScreen.composerToolbar.openComposeOptions)
         tapOnButton(A11yIdentifiers.roomScreen.attachmentPickerLocation)
         
         sleep(10) // Wait for the picker to load
@@ -252,18 +253,12 @@ class UserFlowTests: XCTestCase {
         }
     }
     
-    private func tapOnMenu(_ identifier: String) {
-        let button = app.buttons[identifier]
-        XCTAssertTrue(button.waitForExistence(timeout: 10.0))
-        button.tap(.center)
-    }
-    
     /// Taps on a back button that the system configured with a label but no identifier.
     ///
     /// When there are multiple buttons with the same label in the hierarchy, all the buttons we created
     /// should have an identifier set, and so this method will ignore those picking the one with only a label.
     private func tapOnBackButton(_ label: String = "Back") {
-        let button = app.buttons.matching(NSPredicate(format: "label == %@ && identifier == ''", label)).firstMatch
+        let button = app.buttons.matching(NSPredicate(format: "label == %@ && identifier == 'BackButton'", label)).firstMatch
         XCTAssertTrue(button.waitForExistence(timeout: 10.0))
         button.tap(.center)
     }

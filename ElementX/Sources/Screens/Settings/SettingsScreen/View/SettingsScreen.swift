@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -137,6 +138,19 @@ struct SettingsScreen: View {
     
     private var generalSection: some View {
         Section {
+            ListRow(label: .default(title: L10n.commonAdvancedSettings,
+                                    icon: \.settings),
+                    kind: .navigationLink {
+                        context.send(viewAction: .advancedSettings)
+                    })
+                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.advancedSettings)
+            
+            ListRow(label: .default(title: L10n.screenAdvancedSettingsLabs,
+                                    icon: \.labs),
+                    kind: .navigationLink {
+                        context.send(viewAction: .labs)
+                    })
+            
             ListRow(label: .default(title: L10n.commonAbout,
                                     icon: \.info),
                     kind: .navigationLink {
@@ -161,13 +175,6 @@ struct SettingsScreen: View {
                         })
                         .accessibilityIdentifier(A11yIdentifiers.settingsScreen.analytics)
             }
-            
-            ListRow(label: .default(title: L10n.commonAdvancedSettings,
-                                    icon: \.settings),
-                    kind: .navigationLink {
-                        context.send(viewAction: .advancedSettings)
-                    })
-                    .accessibilityIdentifier(A11yIdentifiers.settingsScreen.advancedSettings)
         }
     }
     

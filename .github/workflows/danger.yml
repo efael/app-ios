@@ -1,0 +1,30 @@
+name: Danger CI
+
+on:
+  pull_request:
+    types: [ labeled, synchronize, opened, reopened ]
+
+jobs:
+  build:
+    name: Danger
+    runs-on: macos-15
+    timeout-minutes: 15
+
+    concurrency:
+      # Only allow a single run of this workflow on each branch, automatically cancelling older runs.
+      group: ${{ format('danger-ci-{0}', github.ref) }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup environment
+        run: 
+          brew install danger/tap/danger-swift swiftlint
+
+      - name: Danger
+        run: 
+          danger-swift ci
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -21,19 +22,15 @@ struct SpaceListScreenViewState: BindableState {
     var selectedSpaceID: String?
     
     var bindings: SpaceListScreenViewStateBindings
-    
-    var subtitle: String {
-        L10n.screenSpaceListDetails(L10n.commonSpaces(joinedSpaces.count), L10n.commonRooms(joinedRoomsCount))
-    }
-    
-    var joinedRoomsCount: Int {
-        joinedSpaces.map(\.childrenCount).reduce(0, +)
-    }
 }
 
-struct SpaceListScreenViewStateBindings { }
+struct SpaceListScreenViewStateBindings {
+    var isPresentingFeatureAnnouncement = false
+}
 
 enum SpaceListScreenViewAction {
     case spaceAction(SpaceRoomCell.Action)
     case showSettings
+    case screenAppeared
+    case featureAnnouncementAppeared
 }

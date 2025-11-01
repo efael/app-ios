@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -14,17 +15,26 @@ import XCTest
 class SpaceListScreenViewModelTests: XCTestCase {
     var joinedSpacesSubject: CurrentValueSubject<[SpaceRoomProxyProtocol], Never>!
     var spaceServiceProxy: SpaceServiceProxyMock!
+    var appSettings: AppSettings!
     
     var viewModel: SpaceListScreenViewModelProtocol!
     
     var context: SpaceListScreenViewModelType.Context {
         viewModel.context
     }
+    
+    override func setUp() {
+        AppSettings.resetAllSettings()
+        appSettings = AppSettings()
+    }
+    
+    override func tearDown() {
+        AppSettings.resetAllSettings()
+    }
 
     func testInitialState() {
         setupViewModel()
         XCTAssertEqual(context.viewState.joinedSpaces.count, 3)
-        XCTAssertEqual(context.viewState.joinedRoomsCount, 0)
     }
     
     func testJoinedSpacesSubscription() async throws {
@@ -52,11 +62,32 @@ class SpaceListScreenViewModelTests: XCTestCase {
         let action = try await deferred.fulfill()
         
         switch action {
-        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.spaceRoomProxy.id == selectedSpace.id:
+        case .selectSpace(let spaceRoomListProxy) where spaceRoomListProxy.id == selectedSpace.id:
             break
         default:
             XCTFail("The action should select the space.")
         }
+    }
+    
+    func testFeatureAnnouncement() async throws {
+        setupViewModel()
+        XCTAssertFalse(appSettings.hasSeenSpacesAnnouncement)
+        XCTAssertFalse(context.isPresentingFeatureAnnouncement)
+        
+        let deferred = deferFulfillment(context.observe(\.isPresentingFeatureAnnouncement)) { $0 == true }
+        viewModel.context.send(viewAction: .screenAppeared)
+        try await deferred.fulfill()
+        XCTAssertTrue(context.isPresentingFeatureAnnouncement)
+        
+        viewModel.context.send(viewAction: .featureAnnouncementAppeared)
+        XCTAssertTrue(appSettings.hasSeenSpacesAnnouncement)
+        
+        context.isPresentingFeatureAnnouncement = false
+        
+        let deferredFailure = deferFailure(context.observe(\.isPresentingFeatureAnnouncement), timeout: 1) { $0 == true }
+        viewModel.context.send(viewAction: .screenAppeared)
+        try await deferredFailure.fulfill()
+        XCTAssertFalse(context.isPresentingFeatureAnnouncement)
     }
     
     // MARK: - Helpers
@@ -72,11 +103,15 @@ class SpaceListScreenViewModelTests: XCTestCase {
         ])
         spaceServiceProxy = SpaceServiceProxyMock(.init())
         spaceServiceProxy.joinedSpacesPublisher = joinedSpacesSubject.asCurrentValuePublisher()
-        spaceServiceProxy.spaceRoomListForClosure = { .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: $0))) }
+        spaceServiceProxy.spaceRoomListSpaceIDClosure = { [joinedSpacesSubject] spaceID in
+            guard let spaceRoomProxy = joinedSpacesSubject?.value.first(where: { $0.id == spaceID }) else { return .failure(.missingSpace) }
+            return .success(SpaceRoomListProxyMock(.init(spaceRoomProxy: spaceRoomProxy)))
+        }
         clientProxy.spaceService = spaceServiceProxy
         
         viewModel = SpaceListScreenViewModel(userSession: userSession,
                                              selectedSpacePublisher: .init(nil),
+                                             appSettings: ServiceLocator.shared.settings,
                                              userIndicatorController: UserIndicatorControllerMock())
     }
 }

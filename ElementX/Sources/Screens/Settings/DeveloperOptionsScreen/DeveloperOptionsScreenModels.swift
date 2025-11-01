@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -41,8 +42,6 @@ protocol DeveloperOptionsProtocol: AnyObject {
     
     var enableOnlySignedDeviceIsolationMode: Bool { get set }
     var enableKeyShareOnInvite: Bool { get set }
-    var threadsEnabled: Bool { get set }
-    var spacesEnabled: Bool { get set }
     var hideQuietNotificationAlerts: Bool { get set }
     
     var hideUnreadMessagesBadge: Bool { get set }
@@ -52,6 +51,11 @@ protocol DeveloperOptionsProtocol: AnyObject {
     var fuzzyRoomListSearchEnabled: Bool { get set }
     var lowPriorityFilterEnabled: Bool { get set }
     var knockingEnabled: Bool { get set }
+    var latestEventSorterEnabled: Bool { get set }
+    
+    var linkPreviewsEnabled: Bool { get set }
+    
+    var spaceSettingsEnabled: Bool { get set }
 }
 
 extension AppSettings: DeveloperOptionsProtocol { }
