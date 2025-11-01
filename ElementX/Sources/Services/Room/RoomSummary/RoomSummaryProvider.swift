@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -89,10 +90,12 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
         self.roomList = roomList
         
         do {
-            listUpdatesSubscriptionResult = roomList.entriesWithDynamicAdapters(pageSize: UInt32(roomListPageSize), listener: SDKListener { [weak self] updates in
-                guard let self else { return }
-                diffsPublisher.send(updates)
-            })
+            listUpdatesSubscriptionResult = roomList.entriesWithDynamicAdaptersWith(pageSize: UInt32(roomListPageSize),
+                                                                                    enableLatestEventSorter: appSettings.latestEventSorterEnabled,
+                                                                                    listener: SDKListener { [weak self] updates in
+                                                                                        guard let self else { return }
+                                                                                        diffsPublisher.send(updates)
+                                                                                    })
             
             // Forces the listener above to be called with the current state
             setFilter(.all(filters: []))
@@ -116,19 +119,27 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
     }
     
     func setFilter(_ filter: RoomSummaryProviderFilter) {
+        let baseFilter: [RoomListEntriesDynamicFilterKind] = if #available(iOS 18.0, *) {
+            [.any(filters: [.all(filters: [.nonSpace, .nonLeft]),
+                            .all(filters: [.space, .invite])]),
+             .deduplicateVersions]
+        } else {
+            // Don't show space invites on iOS 17 given that the tab bar is disabled due to glitches on iPad.
+            [.nonLeft, .nonSpace, .deduplicateVersions]
+        }
+        
         switch filter {
         case .excludeAll:
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .none)
         case let .search(query):
-            let filters: [RoomListEntriesDynamicFilterKind] = if appSettings.fuzzyRoomListSearchEnabled {
-                [.fuzzyMatchRoomName(pattern: query), .nonLeft, .nonSpace, .deduplicateVersions]
+            let filters = if appSettings.fuzzyRoomListSearchEnabled {
+                [.fuzzyMatchRoomName(pattern: query)] + baseFilter
             } else {
-                [.normalizedMatchRoomName(pattern: query), .nonLeft, .nonSpace, .deduplicateVersions]
+                [.normalizedMatchRoomName(pattern: query)] + baseFilter
             }
             _ = listUpdatesSubscriptionResult?.controller().setFilter(kind: .all(filters: filters))
         case let .all(filters):
-            var rustFilters = filters.map(\.rustFilter)
-            rustFilters.append(contentsOf: [.nonLeft, .nonSpace, .deduplicateVersions])
+            var rustFilters = filters.map(\.rustFilter) + baseFilter
             
             if !filters.contains(.lowPriority), appSettings.lowPriorityFilterEnabled {
                 rustFilters.append(.nonLowPriority)
@@ -275,6 +286,7 @@ class RoomSummaryProvider: RoomSummaryProviderProtocol {
                            joinRequestType: joinRequestType,
                            name: roomInfo.displayName ?? roomInfo.id,
                            isDirect: roomInfo.isDirect,
+                           isSpace: roomInfo.isSpace,
                            avatarURL: roomInfo.avatarUrl.flatMap(URL.init(string:)),
                            heroes: roomInfo.heroes.map(UserProfileProxy.init),
                            activeMembersCount: UInt(roomInfo.activeMembersCount),

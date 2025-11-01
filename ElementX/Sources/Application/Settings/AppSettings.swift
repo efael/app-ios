@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -29,6 +30,8 @@ final class AppSettings {
     private enum UserDefaultsKeys: String {
         case lastVersionLaunched
         case seenInvites
+        case hasSeenSpacesAnnouncement
+        case hasSeenNewSoundBanner
         case appLockNumberOfPINAttempts
         case appLockNumberOfBiometricAttempts
         case timelineStyle
@@ -59,8 +62,10 @@ final class AppSettings {
         case enableKeyShareOnInvite
         case knockingEnabled
         case threadsEnabled
-        case spacesEnabled
         case developerOptionsEnabled
+        case linkPreviewsEnabled
+        case latestEventSorterEnabled
+        case spaceSettingsEnabled
         
         // Doug's tweaks 🔧
         case hideUnreadMessagesBadge
@@ -107,6 +112,7 @@ final class AppSettings {
     // swiftlint:disable:next function_parameter_count
     func override(accountProviders: [String],
                   allowOtherAccountProviders: Bool,
+                  hideBrandChrome: Bool,
                   pushGatewayBaseURL: URL,
                   oidcRedirectURL: URL,
                   websiteURL: URL,
@@ -125,6 +131,7 @@ final class AppSettings {
                   mapTilerConfiguration: MapTilerConfiguration) {
         self.accountProviders = accountProviders
         self.allowOtherAccountProviders = allowOtherAccountProviders
+        self.hideBrandChrome = hideBrandChrome
         self.pushGatewayBaseURL = pushGatewayBaseURL
         self.oidcRedirectURL = oidcRedirectURL
         self.websiteURL = websiteURL
@@ -156,6 +163,13 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.seenInvites, defaultValue: [], storageType: .userDefaults(store))
     var seenInvites: Set<String>
     
+    @UserPreference(key: UserDefaultsKeys.hasSeenSpacesAnnouncement, defaultValue: false, storageType: .userDefaults(store))
+    var hasSeenSpacesAnnouncement
+    
+    /// Defaults to `true` for new users, and we use a migration to set it to `false` for existing users.
+    @UserPreference(key: UserDefaultsKeys.hasSeenNewSoundBanner, defaultValue: true, storageType: .userDefaults(store))
+    var hasSeenNewSoundBanner
+    
     /// The initial set of account providers shown to the user in the authentication flow.
     ///
     /// Account provider is the friendly term for the server name. It should not contain an `https` prefix and should
@@ -163,6 +177,8 @@ final class AppSettings {
     private(set) var accountProviders = ["matrix.org"]
     /// Whether or not the user is allowed to manually enter their own account provider or must select from one of `defaultAccountProviders`.
     private(set) var allowOtherAccountProviders = true
+    /// Whether the components surrounding the app brand/logo should be hidden or not
+    private(set) var hideBrandChrome = false
     
     /// The task identifier used for background app refresh. Also used in main target's the Info.plist
     let backgroundAppRefreshTaskIdentifier = "io.element.elementx.background.refresh"
@@ -345,7 +361,7 @@ final class AppSettings {
                                                                    darkStyleID: "dea61faf-292b-4774-9660-58fcef89a7f3")
     
     // MARK: - Presence
-
+    
     @UserPreference(key: UserDefaultsKeys.sharePresence, defaultValue: true, storageType: .userDefaults(store))
     var sharePresence
     
@@ -363,7 +379,7 @@ final class AppSettings {
     /// Configuration to enable only signed device isolation mode for  crypto. In this mode only devices signed by their owner will be considered in e2ee rooms.
     @UserPreference(key: UserDefaultsKeys.enableOnlySignedDeviceIsolationMode, defaultValue: false, storageType: .userDefaults(store))
     var enableOnlySignedDeviceIsolationMode
-
+    
     /// Configuration to enable encrypted history sharing on invite, and accepting keys from inviters.
     @UserPreference(key: UserDefaultsKeys.enableKeyShareOnInvite, defaultValue: false, storageType: .userDefaults(store))
     var enableKeyShareOnInvite
@@ -374,8 +390,14 @@ final class AppSettings {
     @UserPreference(key: UserDefaultsKeys.threadsEnabled, defaultValue: false, storageType: .userDefaults(store))
     var threadsEnabled
     
-    @UserPreference(key: UserDefaultsKeys.spacesEnabled, defaultValue: false, storageType: .userDefaults(store))
-    var spacesEnabled
+    @UserPreference(key: UserDefaultsKeys.spaceSettingsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var spaceSettingsEnabled
+        
+    @UserPreference(key: UserDefaultsKeys.linkPreviewsEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var linkPreviewsEnabled
+    
+    @UserPreference(key: UserDefaultsKeys.latestEventSorterEnabled, defaultValue: false, storageType: .userDefaults(store))
+    var latestEventSorterEnabled
     
     @UserPreference(key: UserDefaultsKeys.developerOptionsEnabled, defaultValue: isDevelopmentBuild, storageType: .userDefaults(store))
     var developerOptionsEnabled

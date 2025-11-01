@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -155,6 +156,8 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
         sheetModel.actions.sink { [weak self] action in
             guard let self else { return }
             switch action {
+            case .displayMessageForwarding(let forwardingItem):
+                displayMessageForwarding(forwardingItem: forwardingItem)
             case .viewInRoomTimeline(let itemID):
                 actionsSubject.send(.viewInRoomTimeline(itemID))
             case .dismiss:
@@ -222,6 +225,8 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
         viewModel.actions.sink { [weak self] action in
             guard let self else { return }
             switch action {
+            case .displayMessageForwarding(let forwardingItem):
+                displayMessageForwarding(forwardingItem: forwardingItem)
             case .viewInRoomTimeline(let itemID):
                 state.bindings.mediaPreviewViewModel = nil
                 actionsSubject.send(.viewInRoomTimeline(itemID))
@@ -239,6 +244,15 @@ class MediaEventsTimelineScreenViewModel: MediaEventsTimelineScreenViewModelType
             L10n.commonDateThisMonth
         } else {
             date.formatted(.dateTime.month(.wide).year())
+        }
+    }
+    
+    private func displayMessageForwarding(forwardingItem: MessageForwardingItem) {
+        state.bindings.mediaPreviewViewModel = nil
+        state.bindings.mediaPreviewSheetViewModel = nil
+        // We need a small delay because we need to wait for the presented sheet to be fully dismissed.
+        DispatchQueue.main.asyncAfter(deadline: .now() + TimelineMediaPreviewViewModel.displayMessageForwardingDelay) {
+            self.actionsSubject.send(.displayMessageForwarding(forwardingItem))
         }
     }
 }

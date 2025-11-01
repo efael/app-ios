@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -18,12 +19,14 @@ struct MediaEventsTimelineScreenCoordinatorParameters {
     let appSettings: AppSettings
     let analytics: AnalyticsService
     let emojiProvider: EmojiProviderProtocol
+    let linkMetadataProvider: LinkMetadataProviderProtocol
     let userIndicatorController: UserIndicatorControllerProtocol
     let timelineControllerFactory: TimelineControllerFactoryProtocol
 }
 
 enum MediaEventsTimelineScreenCoordinatorAction {
     case viewInRoomTimeline(TimelineItemIdentifier)
+    case displayMessageForwarding(MessageForwardingItem)
 }
 
 final class MediaEventsTimelineScreenCoordinator: CoordinatorProtocol {
@@ -49,6 +52,7 @@ final class MediaEventsTimelineScreenCoordinator: CoordinatorProtocol {
                                                        appSettings: parameters.appSettings,
                                                        analyticsService: parameters.analytics,
                                                        emojiProvider: parameters.emojiProvider,
+                                                       linkMetadataProvider: parameters.linkMetadataProvider,
                                                        timelineControllerFactory: parameters.timelineControllerFactory)
         
         let filesTimelineViewModel = TimelineViewModel(roomProxy: parameters.roomProxy,
@@ -60,6 +64,7 @@ final class MediaEventsTimelineScreenCoordinator: CoordinatorProtocol {
                                                        appSettings: parameters.appSettings,
                                                        analyticsService: parameters.analytics,
                                                        emojiProvider: parameters.emojiProvider,
+                                                       linkMetadataProvider: parameters.linkMetadataProvider,
                                                        timelineControllerFactory: parameters.timelineControllerFactory)
         
         viewModel = MediaEventsTimelineScreenViewModel(mediaTimelineViewModel: mediaTimelineViewModel,
@@ -70,9 +75,12 @@ final class MediaEventsTimelineScreenCoordinator: CoordinatorProtocol {
         
         viewModel.actionsPublisher
             .sink { [weak self] action in
+                guard let self else { return }
                 switch action {
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.displayMessageForwarding(forwardingItem))
                 case .viewInRoomTimeline(let itemID):
-                    self?.actionsSubject.send(.viewInRoomTimeline(itemID))
+                    actionsSubject.send(.viewInRoomTimeline(itemID))
                 }
             }
             .store(in: &cancellables)

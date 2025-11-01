@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -42,11 +43,18 @@ class PinnedEventsTimelineScreenViewModel: PinnedEventsTimelineScreenViewModelTy
     
     func displayMediaPreview(_ mediaPreviewViewModel: TimelineMediaPreviewViewModel) {
         mediaPreviewViewModel.actions.sink { [weak self] action in
+            guard let self else { return }
             switch action {
+            case .displayMessageForwarding(let forwardingItem):
+                state.bindings.mediaPreviewViewModel = nil
+                // We need a small delay because we need to wait for the media preview to be fully dismissed.
+                DispatchQueue.main.asyncAfter(deadline: .now() + TimelineMediaPreviewViewModel.displayMessageForwardingDelay) {
+                    self.actionsSubject.send(.displayMessageForwarding(forwardingItem))
+                }
             case .viewInRoomTimeline(let itemID):
-                self?.actionsSubject.send(.viewInRoomTimeline(itemID: itemID))
+                actionsSubject.send(.viewInRoomTimeline(itemID: itemID))
             case .dismiss:
-                self?.state.bindings.mediaPreviewViewModel = nil
+                state.bindings.mediaPreviewViewModel = nil
             }
         }
         .store(in: &cancellables)

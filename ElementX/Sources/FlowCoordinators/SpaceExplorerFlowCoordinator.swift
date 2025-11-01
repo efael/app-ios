@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -67,7 +68,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
         configureStateMachine()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.tryEvent(.start)
     }
     
@@ -93,7 +94,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
         stateMachine.addRouteMapping { event, fromState, userInfo in
             guard event == .selectSpace, case .spaceList = fromState else { return nil }
             guard let spaceRoomListProxy = userInfo as? SpaceRoomListProxyProtocol else { fatalError("A space proxy must be provided.") }
-            return .spaceList(selectedSpaceID: spaceRoomListProxy.spaceRoomProxy.id)
+            return .spaceList(selectedSpaceID: spaceRoomListProxy.id)
         } handler: { [weak self] context in
             guard let self, let spaceRoomListProxy = context.userInfo as? SpaceRoomListProxyProtocol else { return }
             startSpaceFlow(spaceRoomListProxy: spaceRoomListProxy)
@@ -104,6 +105,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
             return .spaceList(selectedSpaceID: nil)
         } handler: { [weak self] _ in
             guard let self else { return }
+            navigationSplitCoordinator.setDetailCoordinator(nil) // If we forget to do this, the tab bar remains hidden.
             selectedSpaceSubject.send(nil)
             spaceFlowCoordinator = nil
         }
@@ -116,6 +118,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
     private func presentSpaceList() {
         let parameters = SpaceListScreenCoordinatorParameters(userSession: userSession,
                                                               selectedSpacePublisher: selectedSpaceSubject.asCurrentValuePublisher(),
+                                                              appSettings: flowParameters.appSettings,
                                                               userIndicatorController: flowParameters.userIndicatorController)
         let coordinator = SpaceListScreenCoordinator(parameters: parameters)
         coordinator.actionsPublisher
@@ -134,7 +137,7 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
     }
     
     private func startSpaceFlow(spaceRoomListProxy: SpaceRoomListProxyProtocol) {
-        let coordinator = SpaceFlowCoordinator(spaceRoomListProxy: spaceRoomListProxy,
+        let coordinator = SpaceFlowCoordinator(entryPoint: .space(spaceRoomListProxy),
                                                spaceServiceProxy: userSession.clientProxy.spaceService,
                                                isChildFlow: false,
                                                navigationStackCoordinator: detailNavigationStackCoordinator,
@@ -162,6 +165,6 @@ class SpaceExplorerFlowCoordinator: FlowCoordinatorProtocol {
         }
         
         coordinator.start()
-        selectedSpaceSubject.send(spaceRoomListProxy.spaceRoomProxy.id)
+        selectedSpaceSubject.send(spaceRoomListProxy.id)
     }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -56,6 +57,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
          appSettings: AppSettings,
          analyticsService: AnalyticsService,
          emojiProvider: EmojiProviderProtocol,
+         linkMetadataProvider: LinkMetadataProviderProtocol,
          timelineControllerFactory: TimelineControllerFactoryProtocol) {
         self.roomProxy = roomProxy
         self.timelineController = timelineController
@@ -80,6 +82,7 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                                 appSettings: appSettings,
                                                                 analyticsService: analyticsService,
                                                                 emojiProvider: emojiProvider,
+                                                                linkMetadataProvider: linkMetadataProvider,
                                                                 timelineControllerFactory: timelineControllerFactory)
         
         let hideTimelineMedia = switch userSession.clientProxy.timelineMediaVisibilityPublisher.value {
@@ -95,12 +98,14 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                                                        isDirectOneToOneRoom: roomProxy.isDirectOneToOneRoom,
                                                        timelineState: TimelineState(focussedEvent: focussedEventID.map { .init(eventID: $0, appearance: .immediate) }),
                                                        ownUserID: roomProxy.ownUserID,
+                                                       hideTimelineMedia: hideTimelineMedia,
                                                        isViewSourceEnabled: appSettings.viewSourceEnabled,
                                                        areThreadsEnabled: appSettings.threadsEnabled,
-                                                       hideTimelineMedia: hideTimelineMedia,
+                                                       linkPreviewsEnabled: appSettings.linkPreviewsEnabled,
                                                        hasPredecessor: roomProxy.predecessorRoom != nil,
                                                        pinnedEventIDs: roomProxy.infoPublisher.value.pinnedEventIDs,
                                                        emojiProvider: emojiProvider,
+                                                       linkMetadataProvider: hideTimelineMedia ? nil : linkMetadataProvider,
                                                        mapTilerConfiguration: appSettings.mapTilerConfiguration,
                                                        bindings: .init(reactionsCollapsed: [:])),
                    mediaProvider: userSession.mediaProvider)
@@ -264,6 +269,11 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
                 displayErrorToast(L10n.commonFailed)
             }
         }
+    }
+    
+    func makeForwardingItem(for itemID: TimelineItemIdentifier) async -> MessageForwardingItem? {
+        guard let content = await timelineController.messageEventContent(for: itemID) else { return nil }
+        return .init(id: itemID, roomID: roomProxy.id, content: content)
     }
     
     // MARK: - Private
@@ -895,8 +905,8 @@ class TimelineViewModel: TimelineViewModelType, TimelineViewModelProtocol {
     // MARK: - Message forwarding
     
     private func forwardMessage(itemID: TimelineItemIdentifier) async {
-        guard let content = await timelineController.messageEventContent(for: itemID) else { return }
-        actionsSubject.send(.displayMessageForwarding(forwardingItem: .init(id: itemID, roomID: roomProxy.id, content: content)))
+        guard let forwardingItem = await makeForwardingItem(for: itemID) else { return }
+        actionsSubject.send(.displayMessageForwarding(forwardingItem: forwardingItem))
     }
     
     // MARK: Pills
@@ -1007,6 +1017,7 @@ extension TimelineViewModel {
                                  appSettings: ServiceLocator.shared.settings,
                                  analyticsService: ServiceLocator.shared.analytics,
                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                 linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }
 }

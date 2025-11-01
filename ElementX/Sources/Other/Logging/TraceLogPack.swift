@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -9,7 +10,7 @@ import Foundation
 import MatrixRustSDK
 
 enum TraceLogPack: Codable, CaseIterable {
-    case eventCache, sendQueue, timeline, notificationClient
+    case eventCache, sendQueue, timeline, notificationClient, syncProfiling
     
     var title: String {
         switch self {
@@ -17,6 +18,7 @@ enum TraceLogPack: Codable, CaseIterable {
         case .sendQueue: "Send queue"
         case .timeline: "Timeline"
         case .notificationClient: "Notification client"
+        case .syncProfiling: "Sync profiling"
         }
     }
 }
@@ -29,6 +31,7 @@ extension TraceLogPack {
         case .sendQueue: self = .sendQueue
         case .timeline: self = .timeline
         case .notificationClient: self = .notificationClient
+        case .syncProfiling: self = .syncProfiling
         }
     }
     
@@ -38,6 +41,7 @@ extension TraceLogPack {
         case .sendQueue: .sendQueue
         case .timeline: .timeline
         case .notificationClient: .notificationClient
+        case .syncProfiling: .syncProfiling
         }
     }
 }

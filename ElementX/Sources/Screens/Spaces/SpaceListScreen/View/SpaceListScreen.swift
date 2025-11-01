@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -22,7 +23,11 @@ struct SpaceListScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .background(Color.compound.bgCanvasDefault.ignoresSafeArea())
-        .bloom()
+        .toolbarBloom(hasSearchBar: false)
+        .onAppear { context.send(viewAction: .screenAppeared) }
+        .sheet(isPresented: $context.isPresentingFeatureAnnouncement) {
+            SpacesAnnouncementSheetView(context: context)
+        }
     }
     
     var header: some View {
@@ -35,7 +40,7 @@ struct SpaceListScreen: View {
                     .foregroundStyle(.compound.textPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text(context.viewState.subtitle)
+                Text(L10n.commonSpaces(context.viewState.joinedSpaces.count))
                     .font(.compound.bodyLG)
                     .foregroundStyle(.compound.textSecondary)
                     .multilineTextAlignment(.center)
@@ -58,9 +63,9 @@ struct SpaceListScreen: View {
     }
     
     var spaces: some View {
-        ForEach(context.viewState.joinedSpaces, id: \.id) { spaceRoom in
-            SpaceRoomCell(spaceRoomProxy: spaceRoom,
-                          isSelected: spaceRoom.id == context.viewState.selectedSpaceID,
+        ForEach(context.viewState.joinedSpaces, id: \.id) { spaceRoomProxy in
+            SpaceRoomCell(spaceRoomProxy: spaceRoomProxy,
+                          isSelected: spaceRoomProxy.id == context.viewState.selectedSpaceID,
                           mediaProvider: context.mediaProvider) { action in
                 context.send(viewAction: .spaceAction(action))
             }
@@ -83,11 +88,13 @@ struct SpaceListScreen: View {
             }
             .accessibilityLabel(L10n.commonSettings)
         }
+        .backportSharedBackgroundVisibility(.hidden)
         
         ToolbarItem(placement: .principal) {
             // Hides the navigationTitle (which is set for the navigation stack label).
             Text("").accessibilityHidden(true)
         }
+        .backportSharedBackgroundVisibility(.hidden)
     }
 }
 
@@ -108,6 +115,7 @@ struct SpaceListScreen_Previews: PreviewProvider, TestablePreview {
         
         let viewModel = SpaceListScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxy)),
                                                  selectedSpacePublisher: .init(nil),
+                                                 appSettings: ServiceLocator.shared.settings,
                                                  userIndicatorController: UserIndicatorControllerMock())
         
         return viewModel

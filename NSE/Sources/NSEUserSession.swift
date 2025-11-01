@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -10,13 +11,14 @@ import MatrixRustSDK
 
 final class NSEUserSession {
     let sessionDirectories: SessionDirectories
+    let appSettings: CommonSettingsProtocol
     
     private let baseClient: Client
     private let notificationClient: NotificationClient
     private let userID: String
     private(set) lazy var mediaProvider: MediaProviderProtocol = MediaProvider(mediaLoader: MediaLoader(client: baseClient),
                                                                                imageCache: .onlyOnDisk,
-                                                                               networkMonitor: nil)
+                                                                               homeserverReachabilityPublisher: nil)
     private let delegateHandle: TaskHandle?
     
     var mediaPreviewVisibility: MediaPreviews {
@@ -48,6 +50,7 @@ final class NSEUserSession {
          appSettings: CommonSettingsProtocol) async throws {
         sessionDirectories = credentials.restorationToken.sessionDirectories
         userID = credentials.userID
+        self.appSettings = appSettings
         
         let homeserverURL = credentials.restorationToken.session.homeserverUrl
         let clientBuilder = ClientBuilder

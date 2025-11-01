@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -23,7 +24,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
     private let notificationManager: NotificationManagerProtocol
     private let userIndicatorController: UserIndicatorControllerProtocol
     private let windowManager: WindowManagerProtocol
-    private let isNewLogin: Bool
+    private var isNewLogin: Bool
     
     private var navigationStackCoordinator: NavigationStackCoordinator!
     
@@ -102,7 +103,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
         return isNewLogin || requiresVerification || requiresAppLockSetup || requiresAnalyticsSetup || requiresNotificationsSetup
     }
     
-    func start() {
+    func start(animated: Bool) {
         guard shouldStart else {
             fatalError("This flow coordinator shouldn't have been started")
         }
@@ -219,6 +220,7 @@ class OnboardingFlowCoordinator: FlowCoordinatorProtocol {
             case (_, _, .notificationPermissions):
                 presentNotificationPermissionsScreen()
             case (_, _, .finished):
+                isNewLogin = false
                 actionsSubject.send(.dismiss)
                 stateMachine.tryState(.initial)
             case (.finished, _, .initial):

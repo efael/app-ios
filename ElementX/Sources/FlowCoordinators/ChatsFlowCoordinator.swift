@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -11,6 +12,7 @@ import MatrixRustSDK
 import SwiftUI
 
 enum ChatsFlowCoordinatorAction {
+    case switchToChatsTab
     case showSettings
     case showChatBackupSettings
     case sessionVerification(SessionVerificationScreenFlow)
@@ -29,12 +31,15 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     
     // periphery:ignore - retaining purpose
     private var roomFlowCoordinator: RoomFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var spaceFlowCoordinator: SpaceFlowCoordinator?
     
     // periphery:ignore - retaining purpose
     private var bugReportFlowCoordinator: BugReportFlowCoordinator?
-    
     // periphery:ignore - retaining purpose
     private var encryptionResetFlowCoordinator: EncryptionResetFlowCoordinator?
+    // periphery:ignore - retaining purpose
+    private var startChatFlowCoordinator: StartChatFlowCoordinator?
     
     // periphery:ignore - retaining purpose
     private var globalSearchScreenCoordinator: GlobalSearchScreenCoordinator?
@@ -66,7 +71,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         setupObservers()
     }
     
-    func start() {
+    func start(animated: Bool) {
         stateMachine.processEvent(.start)
     }
     
@@ -117,7 +122,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             }
             
         case .roomDetails(let roomID):
-            if stateMachine.state.roomListSelectedRoomID == roomID {
+            if case .room(roomID) = stateMachine.state.detailState {
                 roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
             } else {
                 stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .roomDetails), userInfo: .init(animated: animated))
@@ -126,6 +131,12 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             roomFlowCoordinator?.clearRoute(animated: animated)
         case .roomMemberDetails:
             roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
+        case .thread(let roomID, let threadRootEventID, let focusEventID):
+            stateMachine.processEvent(.selectRoom(roomID: roomID,
+                                                  via: [],
+                                                  entryPoint: .thread(rootEventID: threadRootEventID,
+                                                                      focusEventID: focusEventID)),
+                                      userInfo: .init(animated: animated))
         case .event(let eventID, let roomID, let via):
             stateMachine.processEvent(.selectRoom(roomID: roomID, via: via, entryPoint: .eventID(eventID)), userInfo: .init(animated: animated))
         case .eventOnRoomAlias(let eventID, let alias):
@@ -154,7 +165,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 stateMachine.processEvent(.showShareExtensionRoomList(sharePayload: payload), userInfo: .init(animated: animated))
             }
         case .transferOwnership(let roomID):
-            if stateMachine.state.roomListSelectedRoomID == roomID {
+            if case .room(roomID) = stateMachine.state.detailState {
                 roomFlowCoordinator?.handleAppRoute(appRoute, animated: animated)
             } else {
                 stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .transferOwnership))
@@ -178,28 +189,23 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
     private func setupStateMachine() {
         stateMachine.addTransitionHandler { [weak self] context in
             guard let self else { return }
-            let animated = (context.userInfo as? ChatsFlowCoordinatorStateMachine.EventUserInfo)?.animated ?? true
+            
+            let userInfo = context.userInfo as? ChatsFlowCoordinatorStateMachine.EventUserInfo
+            let animated = userInfo?.animated ?? true
+            
             switch (context.fromState, context.event, context.toState) {
             case (.initial, .start, .roomList):
                 presentHomeScreen()
-            case(.roomList(let roomListSelectedRoomID), .selectRoom(let roomID, let via, let entryPoint), .roomList):
-                if roomListSelectedRoomID == roomID,
-                   !entryPoint.isEventID, // Don't reuse the existing room so the live timeline is hidden while the detached timeline is loading.
-                   let roomFlowCoordinator {
-                    let route: AppRoute = switch entryPoint {
-                    case .room: .room(roomID: roomID, via: via)
-                    case .roomDetails: .roomDetails(roomID: roomID)
-                    case .eventID(let eventID): .event(eventID: eventID, roomID: roomID, via: via) // ignored.
-                    case .share(let payload): .share(payload)
-                    case .transferOwnership: .transferOwnership(roomID: roomID)
-                    }
-                    roomFlowCoordinator.handleAppRoute(route, animated: animated)
-                } else {
-                    startRoomFlow(roomID: roomID, via: via, entryPoint: entryPoint, animated: animated)
-                }
-                actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
+            case(.roomList(let detailState), .selectRoom(let roomID, let via, let entryPoint), .roomList):
+                handleSelectRoomTransition(roomID: roomID, via: via, entryPoint: entryPoint, detailState: detailState, animated: animated)
             case(.roomList, .deselectRoom, .roomList):
                 dismissRoomFlow(animated: animated)
+            
+            case(.roomList, .startSpaceFlow, .roomList):
+                guard let spaceRoomListProxy = userInfo?.spaceRoomListProxy else { fatalError("A space room list proxy is required.") }
+                startSpaceFlow(spaceRoomListProxy: spaceRoomListProxy, animated: animated)
+            case (.roomList, .finishedSpaceFlow, .roomList):
+                dismissSpaceFlow(animated: animated)
                 
             case (.roomList, .feedbackScreen, .feedbackScreen):
                 bugReportFlowCoordinator = BugReportFlowCoordinator(parameters: .init(presentationMode: .sheet(sidebarNavigationStackCoordinator),
@@ -218,12 +224,12 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             case (.roomList, .startEncryptionResetFlow, .encryptionResetFlow):
                 startEncryptionResetFlow(animated: animated)
             case (.encryptionResetFlow, .finishedEncryptionResetFlow, .roomList):
-                break
+                encryptionResetFlowCoordinator = nil
                 
-            case (.roomList, .showStartChatScreen, .startChatScreen):
-                presentStartChat(animated: animated)
-            case (.startChatScreen, .dismissedStartChatScreen, .roomList):
-                break
+            case (.roomList, .startStartChatFlow, .startChatFlow):
+                startStartChatFlow(animated: animated)
+            case (.startChatFlow, .finishedStartChatFlow, .roomList):
+                startChatFlowCoordinator = nil
                 
             case (.roomList, .showRoomDirectorySearchScreen, .roomDirectorySearchScreen):
                 presentRoomDirectorySearch()
@@ -264,8 +270,10 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         
         stateMachine.addTransitionHandler { [weak self] context in
             switch context.toState {
-            case .roomList(let roomListSelectedRoomID):
-                self?.selectedRoomSubject.send(roomListSelectedRoomID)
+            case .roomList(detailState: .room(let detailStateRoomID)):
+                self?.selectedRoomSubject.send(detailStateRoomID)
+            case .roomList(detailState: nil):
+                self?.selectedRoomSubject.send(nil)
             default:
                 break
             }
@@ -278,6 +286,28 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 fatalError("Failed transition with context: \(context)")
             }
         }
+    }
+    
+    private func handleSelectRoomTransition(roomID: String, via: [String], entryPoint: RoomFlowCoordinatorEntryPoint, detailState: ChatsFlowCoordinatorStateMachine.DetailState?, animated: Bool) {
+        if case .room(roomID) = detailState,
+           !entryPoint.isEventID, // Don't reuse the existing room so the live timeline is hidden while the detached timeline is loading.
+           let roomFlowCoordinator {
+            let route: AppRoute = switch entryPoint {
+            case .room: .room(roomID: roomID, via: via)
+            case .roomDetails: .roomDetails(roomID: roomID)
+            case .eventID(let eventID): .event(eventID: eventID, roomID: roomID, via: via) // ignored.
+            case .share(let payload): .share(payload)
+            case .transferOwnership: .transferOwnership(roomID: roomID)
+            case .thread(let rootEventID, let focusEventID): .thread(roomID: roomID, threadRootEventID: rootEventID, focusEventID: focusEventID)
+            }
+            roomFlowCoordinator.handleAppRoute(route, animated: animated)
+        } else {
+            if case .space = detailState {
+                dismissRoomFlow(animated: animated)
+            }
+            startRoomFlow(roomID: roomID, via: via, entryPoint: entryPoint, animated: animated)
+        }
+        actionsSubject.send(.hideCallScreenOverlay) // Turn any active call into a PiP so that navigation from a notification is visible to the user.
     }
     
     private func setupObservers() {
@@ -351,9 +381,11 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                     handleAppRoute(.roomDetails(roomID: roomID), animated: true)
                 case .presentReportRoom(let roomID):
                     stateMachine.processEvent(.presentReportRoomScreen(roomID: roomID))
+                case .presentSpace(let spaceRoomListProxy):
+                    stateMachine.processEvent(.startSpaceFlow, userInfo: .init(animated: true, spaceRoomListProxy: spaceRoomListProxy))
                 case .roomLeft(let roomID):
-                    if case .roomList(roomListSelectedRoomID: let roomListSelectedRoomID) = stateMachine.state,
-                       roomListSelectedRoomID == roomID {
+                    if case .roomList(detailState: .room(let detailStateRoomID)) = stateMachine.state,
+                       detailStateRoomID == roomID {
                         clearRoute(animated: true)
                     }
                 case .presentSettingsScreen:
@@ -367,7 +399,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 case .presentEncryptionResetScreen:
                     stateMachine.processEvent(.startEncryptionResetFlow)
                 case .presentStartChatScreen:
-                    stateMachine.processEvent(.showStartChatScreen)
+                    stateMachine.processEvent(.startStartChatFlow)
                 case .presentGlobalSearch:
                     presentGlobalSearch()
                 case .logout:
@@ -398,8 +430,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             switch action {
             case .dismiss(let shouldLeaveRoom):
                 if shouldLeaveRoom,
-                   case .roomList(let roomListSelectedRoomID) = stateMachine.state,
-                   roomListSelectedRoomID == roomID {
+                   case .roomList(detailState: .room(let detailStateRoomID)) = stateMachine.state,
+                   detailStateRoomID == roomID {
                     clearRoute(animated: true)
                 }
                 navigationSplitCoordinator.setSheetCoordinator(nil)
@@ -453,6 +485,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 actionsSubject.send(.showCallScreen(roomProxy: roomProxy))
             case .verifyUser(let userID):
                 actionsSubject.send(.sessionVerification(.userInitiator(userID: userID)))
+            case .continueWithSpaceFlow(let spaceRoomListProxy):
+                stateMachine.processEvent(.startSpaceFlow, userInfo: .init(animated: false, spaceRoomListProxy: spaceRoomListProxy))
             case .finished:
                 stateMachine.processEvent(.deselectRoom)
             }
@@ -476,6 +510,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             coordinator.handleAppRoute(.share(payload), animated: animated)
         case .transferOwnership:
             coordinator.handleAppRoute(.transferOwnership(roomID: roomID), animated: animated)
+        case .thread(let rootEventID, let focusEventID):
+            coordinator.handleAppRoute(.thread(roomID: roomID, threadRootEventID: rootEventID, focusEventID: focusEventID), animated: animated)
         }
                 
         Task {
@@ -491,41 +527,73 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
         roomFlowCoordinator = nil
     }
     
+    // MARK: Space Flow
+    
+    private func startSpaceFlow(spaceRoomListProxy: SpaceRoomListProxyProtocol, animated: Bool) {
+        let coordinator = SpaceFlowCoordinator(entryPoint: .space(spaceRoomListProxy),
+                                               spaceServiceProxy: userSession.clientProxy.spaceService,
+                                               isChildFlow: false,
+                                               navigationStackCoordinator: detailNavigationStackCoordinator,
+                                               flowParameters: flowParameters)
+        coordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .presentCallScreen(let roomProxy):
+                    actionsSubject.send(.showCallScreen(roomProxy: roomProxy))
+                case .verifyUser(let userID):
+                    actionsSubject.send(.sessionVerification(.userInitiator(userID: userID)))
+                case .finished:
+                    stateMachine.processEvent(.finishedSpaceFlow)
+                }
+            }
+            .store(in: &cancellables)
+        
+        spaceFlowCoordinator = coordinator
+        
+        if navigationSplitCoordinator.detailCoordinator !== detailNavigationStackCoordinator {
+            navigationSplitCoordinator.setDetailCoordinator(detailNavigationStackCoordinator, animated: animated)
+        }
+        
+        coordinator.start()
+    }
+    
+    private func dismissSpaceFlow(animated: Bool) {
+        // Based on dismissRoomFlow, past me was very insistent that this must happen after the flow has tidied the stack 😅.
+        navigationSplitCoordinator.setDetailCoordinator(nil, animated: animated)
+        roomFlowCoordinator = nil
+    }
+    
     // MARK: Start Chat
     
-    private func presentStartChat(animated: Bool) {
-        let startChatNavigationStackCoordinator = NavigationStackCoordinator()
-
-        let userDiscoveryService = UserDiscoveryService(clientProxy: userSession.clientProxy)
-        let parameters = StartChatScreenCoordinatorParameters(orientationManager: flowParameters.windowManager,
-                                                              userSession: userSession,
-                                                              userIndicatorController: flowParameters.userIndicatorController,
-                                                              navigationStackCoordinator: startChatNavigationStackCoordinator,
-                                                              userDiscoveryService: userDiscoveryService,
-                                                              mediaUploadingPreprocessor: MediaUploadingPreprocessor(appSettings: flowParameters.appSettings),
-                                                              appSettings: flowParameters.appSettings,
-                                                              analytics: flowParameters.analytics)
+    private func startStartChatFlow(animated: Bool) {
+        let navigationStackCoordinator = NavigationStackCoordinator()
+        let coordinator = StartChatFlowCoordinator(userDiscoveryService: UserDiscoveryService(clientProxy: userSession.clientProxy),
+                                                   navigationStackCoordinator: navigationStackCoordinator,
+                                                   flowParameters: flowParameters)
         
-        let coordinator = StartChatScreenCoordinator(parameters: parameters)
-        coordinator.actions.sink { [weak self] action in
-            guard let self else { return }
-            switch action {
-            case .close:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-            case .openRoom(let roomID):
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
-            case .openRoomDirectorySearch:
-                navigationSplitCoordinator.setSheetCoordinator(nil)
-                stateMachine.processEvent(.showRoomDirectorySearchScreen)
+        coordinator.actionsPublisher
+            .sink { [weak self] action in
+                guard let self else { return }
+                switch action {
+                case .finished(let roomID):
+                    navigationSplitCoordinator.setSheetCoordinator(nil)
+                    
+                    if let roomID {
+                        stateMachine.processEvent(.selectRoom(roomID: roomID, via: [], entryPoint: .room))
+                    }
+                case .showRoomDirectory:
+                    navigationSplitCoordinator.setSheetCoordinator(nil)
+                    stateMachine.processEvent(.showRoomDirectorySearchScreen)
+                }
             }
-        }
-        .store(in: &cancellables)
-
-        startChatNavigationStackCoordinator.setRootCoordinator(coordinator)
-
-        navigationSplitCoordinator.setSheetCoordinator(startChatNavigationStackCoordinator, animated: animated) { [weak self] in
-            self?.stateMachine.processEvent(.dismissedStartChatScreen)
+            .store(in: &cancellables)
+        
+        startChatFlowCoordinator = coordinator
+        coordinator.start()
+        
+        navigationSplitCoordinator.setSheetCoordinator(navigationStackCoordinator, animated: animated) { [weak self] in
+            self?.stateMachine.processEvent(.finishedStartChatFlow)
         }
     }
     
@@ -567,10 +635,8 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
             guard let self else { return }
             switch action {
             case .resetComplete:
-                encryptionResetFlowCoordinator = nil
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             case .cancel:
-                encryptionResetFlowCoordinator = nil
                 navigationSplitCoordinator.setSheetCoordinator(nil)
             }
         }
@@ -604,6 +670,7 @@ class ChatsFlowCoordinator: FlowCoordinatorProtocol {
                 case .select(let roomID):
                     dismissGlobalSearch()
                     handleAppRoute(.room(roomID: roomID, via: []), animated: true)
+                    actionsSubject.send(.switchToChatsTab)
                 }
             }
             .store(in: &cancellables)

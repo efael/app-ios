@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -47,20 +48,28 @@ struct MediaEventsTimelineScreen: View {
         if context.viewState.shouldShowEmptyState {
             emptyState
         } else {
-            ScrollView {
-                Group {
-                    switch context.viewState.bindings.screenMode {
-                    case .media:
-                        mediaContent
-                    case .files:
-                        filesContent
-                    }
-                    
-                    header
-                }
-            }
-            .scaleEffect(.init(width: 1, height: -1))
+            scrollView
+                // Remove the glass effect of iOS 26+
+                // A flipped table view will always trigger it
+                // since the nav bar thinks is always at the bottom.
+                .backportScrollEdgeEffectHidden()
         }
+    }
+    
+    private var scrollView: some View {
+        ScrollView {
+            Group {
+                switch context.viewState.bindings.screenMode {
+                case .media:
+                    mediaContent
+                case .files:
+                    filesContent
+                }
+                
+                header
+            }
+        }
+        .scaleEffect(.init(width: 1, height: -1))
     }
     
     @ViewBuilder
@@ -215,7 +224,7 @@ struct MediaEventsTimelineScreen: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            if #available(iOS 19, *) {
+            if #available(iOS 26, *) {
                 screenModePicker
             } else {
                 screenModePicker
@@ -223,9 +232,13 @@ struct MediaEventsTimelineScreen: View {
             }
         }
         
-        ToolbarItem(placement: .primaryAction) {
-            // Reserve the space trailing space to match the back button.
-            CompoundIcon(\.search).hidden()
+        if #available(iOS 26, *) {
+            ToolbarSpacer()
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                // Reserve the space trailing space to match the back button.
+                CompoundIcon(\.search).hidden()
+            }
         }
     }
     
@@ -306,6 +319,7 @@ struct MediaEventsTimelineScreen_Previews: PreviewProvider, TestablePreview {
                                  appSettings: ServiceLocator.shared.settings,
                                  analyticsService: ServiceLocator.shared.analytics,
                                  emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                 linkMetadataProvider: LinkMetadataProvider(),
                                  timelineControllerFactory: TimelineControllerFactoryMock(.init()))
     }
 }

@@ -38,9 +38,9 @@ targets:
       - package: Collections
       - package: Compound
       - package: DeviceKit
-      - package: DTCoreText
       - package: LRUCache
       - package: Version
+      - package: SwiftSoup
 
     info:
       path: Info.plist

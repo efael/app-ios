@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE in the repository root for full details.
 //
 
@@ -46,11 +47,23 @@ struct EditRoomAddressListRow: View {
 }
 
 private extension View {
-    func errorBackground(_ shouldDisplay: Bool) -> some View {
-        listRowBackground(shouldDisplay ? AnyView(RoundedRectangle(cornerRadius: 10)
+    @ViewBuilder
+    private var shape: some View {
+        if #available(iOS 26, *) {
+            Capsule()
                 .inset(by: 1)
                 .fill(.compound.bgCriticalSubtleHovered)
-                .stroke(Color.compound.borderCriticalPrimary)) : AnyView(Color.compound.bgCanvasDefaultLevel1))
+                .stroke(Color.compound.borderCriticalPrimary)
+        } else {
+            RoundedRectangle(cornerRadius: 10)
+                .inset(by: 1)
+                .fill(.compound.bgCriticalSubtleHovered)
+                .stroke(Color.compound.borderCriticalPrimary)
+        }
+    }
+    
+    func errorBackground(_ shouldDisplay: Bool) -> some View {
+        listRowBackground(shouldDisplay ? AnyView(shape) : AnyView(Color.compound.bgCanvasDefaultLevel1))
     }
 }
 

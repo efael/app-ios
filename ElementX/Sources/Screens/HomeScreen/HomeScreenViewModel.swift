@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -105,6 +106,12 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             }
             .store(in: &cancellables)
         
+        appSettings.$hasSeenNewSoundBanner
+            .sink { [weak self] hasSeenNewSoundBanner in
+                self?.state.shouldShowNewSoundBanner = !hasSeenNewSoundBanner
+            }
+            .store(in: &cancellables)
+        
         userSession.clientProxy.hideInviteAvatarsPublisher
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
@@ -160,6 +167,8 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
             actionsSubject.send(.presentEncryptionResetScreen)
         case .skipRecoveryKeyConfirmation:
             state.securityBannerMode = .dismissed
+        case .dismissNewSoundBanner:
+            appSettings.hasSeenNewSoundBanner = true
         case .updateVisibleItemRange(let range):
             roomSummaryProvider?.updateVisibleRange(range)
         case .startChat:
@@ -355,7 +364,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                    ownMember.role.isOwner {
                     await roomProxy.updateMembers()
                     var isLastOwner = true
-                    for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID {
+                    for member in roomProxy.membersPublisher.value where member.userID != roomProxy.ownUserID && member.membership == .join {
                         if member.role.isOwner {
                             isLastOwner = false
                             break
@@ -414,11 +423,7 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
         
         switch await userSession.clientProxy.joinRoom(roomID, via: []) {
         case .success:
-            actionsSubject.send(.presentRoom(roomIdentifier: roomID))
-            analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
-                                             isSpace: roomProxy.info.isSpace,
-                                             activeMemberCount: UInt(roomProxy.info.activeMembersCount))
-            appSettings.seenInvites.remove(roomID)
+            await finishAcceptInvite(roomProxy: roomProxy)
         case .failure(let error):
             switch error {
             case .invalidInvite:
@@ -427,6 +432,28 @@ class HomeScreenViewModel: HomeScreenViewModelType, HomeScreenViewModelProtocol 
                 displayError()
             }
         }
+    }
+    
+    private func finishAcceptInvite(roomProxy: InvitedRoomProxyProtocol) async {
+        if roomProxy.info.isSpace {
+            let spaceService = userSession.clientProxy.spaceService
+            
+            switch await spaceService.spaceRoomList(spaceID: roomProxy.id) {
+            case .success(let spaceRoomListProxy):
+                actionsSubject.send(.presentSpace(spaceRoomListProxy))
+            case .failure(let error):
+                MXLog.error("Failed to get the space room list after accepting invite: \(error)")
+                displayError()
+                return
+            }
+        } else {
+            actionsSubject.send(.presentRoom(roomIdentifier: roomProxy.id))
+        }
+        
+        analyticsService.trackJoinedRoom(isDM: roomProxy.info.isDirect,
+                                         isSpace: roomProxy.info.isSpace,
+                                         activeMemberCount: UInt(roomProxy.info.activeMembersCount))
+        appSettings.seenInvites.remove(roomProxy.id)
     }
     
     private func showDeclineInviteConfirmationAlert(roomID: String) async {

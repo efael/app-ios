@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -18,6 +19,7 @@ enum CallScreenViewModelAction {
 struct CallScreenViewState: BindableState {
     let script: String?
     var url: URL?
+    let isGenericCallLink: Bool
     
     let certificateValidator: CertificateValidatorHookProtocol
     
@@ -105,7 +107,7 @@ enum CallScreenJavaScriptMessageName: String, CaseIterable {
 
 struct DecodedWidgetMessage: Decodable {
     private static let decoder = JSONDecoder()
-    private static let joinAction = "io.element.join"
+    private static let contentLoadedAction = "content_loaded"
     private static let fromWidget = "fromWidget"
     
     let action: String?
@@ -118,7 +120,7 @@ struct DecodedWidgetMessage: Decodable {
         return try decoder.decode(DecodedWidgetMessage.self, from: data)
     }
     
-    var hasJoined: Bool {
-        action == Self.joinAction && api == Self.fromWidget
+    var hasLoaded: Bool {
+        action == Self.contentLoadedAction && api == Self.fromWidget
     }
 }

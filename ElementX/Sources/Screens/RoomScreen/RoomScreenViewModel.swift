@@ -1,5 +1,6 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -16,7 +17,6 @@ typealias RoomScreenViewModelType = StateStoreViewModel<RoomScreenViewState, Roo
 class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol {
     private let clientProxy: ClientProxyProtocol
     private let roomProxy: JoinedRoomProxyProtocol
-    private let appMediator: AppMediatorProtocol
     private let appSettings: AppSettings
     private let analyticsService: AnalyticsService
     private let userIndicatorController: UserIndicatorControllerProtocol
@@ -54,14 +54,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
          roomProxy: JoinedRoomProxyProtocol,
          initialSelectedPinnedEventID: String?,
          ongoingCallRoomIDPublisher: CurrentValuePublisher<String?, Never>,
-         appMediator: AppMediatorProtocol,
          appSettings: AppSettings,
          appHooks: AppHooks,
          analyticsService: AnalyticsService,
          userIndicatorController: UserIndicatorControllerProtocol) {
         clientProxy = userSession.clientProxy
         self.roomProxy = roomProxy
-        self.appMediator = appMediator
         self.appSettings = appSettings
         self.analyticsService = analyticsService
         self.userIndicatorController = userIndicatorController
@@ -139,11 +137,18 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
     
     func displayMediaPreview(_ mediaPreviewViewModel: TimelineMediaPreviewViewModel) {
         mediaPreviewViewModel.actions.sink { [weak self] action in
+            guard let self else { return }
             switch action {
-            case .viewInRoomTimeline:
-                fatalError("viewInRoomTimeline should not be visible on a room preview.")
             case .dismiss:
-                self?.state.bindings.mediaPreviewViewModel = nil
+                state.bindings.mediaPreviewViewModel = nil
+            case .displayMessageForwarding(let forwardingItem):
+                state.bindings.mediaPreviewViewModel = nil
+                // We need a small delay because we need to wait for the media preview to be fully dismissed.
+                DispatchQueue.main.asyncAfter(deadline: .now() + TimelineMediaPreviewViewModel.displayMessageForwardingDelay) {
+                    self.actionsSubject.send(.displayMessageForwarding(forwardingItem))
+                }
+            case .viewInRoomTimeline:
+                fatalError("\(action) should not be visible on a room preview.")
             }
         }
         .store(in: &cancellables)
@@ -179,7 +184,7 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
         }
         .store(in: &cancellables)
         
-        appMediator.networkMonitor.reachabilityPublisher
+        clientProxy.homeserverReachabilityPublisher
             .filter { $0 == .reachable }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -413,13 +418,12 @@ class RoomScreenViewModel: RoomScreenViewModelType, RoomScreenViewModelProtocol 
 
 extension RoomScreenViewModel {
     static func mock(roomProxyMock: JoinedRoomProxyMock,
-                     clientProxyMock: ClientProxyMock = ClientProxyMock(),
+                     clientProxyMock: ClientProxyMock = ClientProxyMock(.init()),
                      appHooks: AppHooks = AppHooks()) -> RoomScreenViewModel {
         RoomScreenViewModel(userSession: UserSessionMock(.init(clientProxy: clientProxyMock)),
                             roomProxy: roomProxyMock,
                             initialSelectedPinnedEventID: nil,
                             ongoingCallRoomIDPublisher: .init(.init(nil)),
-                            appMediator: AppMediatorMock.default,
                             appSettings: ServiceLocator.shared.settings,
                             appHooks: appHooks,
                             analyticsService: ServiceLocator.shared.analytics,

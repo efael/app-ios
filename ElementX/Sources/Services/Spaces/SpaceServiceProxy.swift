@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -30,11 +31,20 @@ class SpaceServiceProxy: SpaceServiceProxyProtocol {
         })
     }
     
-    func spaceRoomList(for spaceRoomProxy: SpaceRoomProxyProtocol) async -> Result<SpaceRoomListProxyProtocol, SpaceServiceProxyError> {
+    func spaceRoomList(spaceID: String) async -> Result<SpaceRoomListProxyProtocol, SpaceServiceProxyError> {
         do {
-            return try await .success(SpaceRoomListProxy(spaceService.spaceRoomList(spaceId: spaceRoomProxy.id), spaceRoomProxy: spaceRoomProxy))
+            return try await .success(SpaceRoomListProxy(spaceService.spaceRoomList(spaceId: spaceID)))
         } catch {
-            MXLog.error("Failed creating space room list for \(spaceRoomProxy.id): \(error)")
+            MXLog.error("Failed creating space room list for \(spaceID): \(error)")
+            return .failure(.sdkError(error))
+        }
+    }
+    
+    func leaveSpace(spaceID: String) async -> Result<LeaveSpaceHandleProxy, SpaceServiceProxyError> {
+        do {
+            return try await .success(.init(spaceID: spaceID, leaveHandle: spaceService.leaveSpace(spaceId: spaceID)))
+        } catch {
+            MXLog.error("Failed to get leave handle for \(spaceID): \(error)")
             return .failure(.sdkError(error))
         }
     }

@@ -1,4 +1,5 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -14,6 +15,7 @@ struct SpaceRoomCell: View {
     
     let spaceRoomProxy: SpaceRoomProxyProtocol
     let isSelected: Bool
+    var isJoining = false
     let mediaProvider: MediaProviderProtocol!
     
     enum Action { case select(SpaceRoomProxyProtocol), join(SpaceRoomProxyProtocol) }
@@ -24,16 +26,29 @@ struct SpaceRoomCell: View {
     
     private var subtitle: String {
         if spaceRoomProxy.isSpace {
-            spaceRoomProxy.joinRule == .public ? L10n.commonPublicSpace : L10n.commonPrivateSpace
+            switch spaceRoomProxy.visibility {
+            case .public: L10n.commonPublicSpace
+            case .private: L10n.commonPrivateSpace
+            case .restricted: L10n.commonSharedSpace
+            case .none: L10n.commonPrivateSpace
+            }
         } else {
             L10n.commonMemberCount(spaceRoomProxy.joinedMembersCount)
         }
     }
     
+    var visibilityIcon: KeyPath<CompoundIcons, Image>? {
+        switch spaceRoomProxy.visibility {
+        case .public: \.public
+        case .private: \.lockSolid
+        case .restricted: nil
+        case .none: \.lockSolid
+        }
+    }
+    
     private var details: String {
         if spaceRoomProxy.isSpace {
-            L10n.screenSpaceListDetails(L10n.commonRooms(spaceRoomProxy.childrenCount),
-                                        L10n.commonMemberCount(spaceRoomProxy.joinedMembersCount))
+            L10n.commonMemberCount(spaceRoomProxy.joinedMembersCount)
         } else {
             spaceRoomProxy.topic ?? " " // Use a single space to reserve a consistent amount of space.
         }
@@ -59,7 +74,7 @@ struct SpaceRoomCell: View {
             .accessibilityElement(children: .combine)
         }
         .buttonStyle(SpaceRoomCellButtonStyle(isSelected: isSelected))
-        .accessibilityIdentifier(A11yIdentifiers.spaceListScreen.spaceRoomName(spaceRoomProxy.name ?? spaceRoomProxy.id))
+        .accessibilityIdentifier(A11yIdentifiers.spaceListScreen.spaceRoomName(spaceRoomProxy.name))
     }
     
     @ViewBuilder @MainActor
@@ -76,12 +91,12 @@ struct SpaceRoomCell: View {
     private var content: some View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(spaceRoomProxy.name ?? spaceRoomProxy.id)
+                Text(spaceRoomProxy.name)
                     .font(.compound.bodyLGSemibold)
                     .foregroundColor(.compound.textPrimary)
                     .lineLimit(1)
                 
-                visibilityLabel
+                subtitleLabel
                 
                 Text(details)
                     .font(.compound.bodyMD)
@@ -94,17 +109,19 @@ struct SpaceRoomCell: View {
         }
     }
     
-    private var visibilityLabel: some View {
+    private var subtitleLabel: some View {
         Label {
             Text(subtitle)
                 .font(.compound.bodyMD)
                 .foregroundStyle(.compound.textSecondary)
                 .lineLimit(1)
         } icon: {
-            CompoundIcon(spaceRoomProxy.joinRule == .public ? \.public : \.lockSolid,
-                         size: .xSmall,
-                         relativeTo: .compound.bodyMD)
-                .foregroundStyle(.compound.iconTertiary)
+            if let visibilityIcon {
+                CompoundIcon(visibilityIcon,
+                             size: .xSmall,
+                             relativeTo: .compound.bodyMD)
+                    .foregroundStyle(.compound.iconTertiary)
+            }
         }
         .labelStyle(.custom(spacing: 4))
     }
@@ -116,6 +133,12 @@ struct SpaceRoomCell: View {
             Button(L10n.actionJoin) { action(.join(spaceRoomProxy)) }
                 .font(.compound.bodyLG)
                 .foregroundStyle(.compound.textActionAccent)
+                .opacity(isJoining ? 0 : 1)
+                .overlay {
+                    if isJoining {
+                        ProgressView()
+                    }
+                }
         case .joined, .knocked, .banned:
             EmptyView()
         }
@@ -145,6 +168,15 @@ struct SpaceRoomCell_Previews: PreviewProvider, TestablePreview {
                               isSelected: false,
                               mediaProvider: mediaProvider) { _ in }
             }
+            
+            SpaceRoomCell(spaceRoomProxy: SpaceRoomProxyMock(.init(id: "Space being joined", isSpace: true)),
+                          isSelected: false,
+                          isJoining: true,
+                          mediaProvider: mediaProvider) { _ in }
+            SpaceRoomCell(spaceRoomProxy: SpaceRoomProxyMock(.init(id: "Room being joined", isSpace: false)),
+                          isSelected: false,
+                          isJoining: true,
+                          mediaProvider: mediaProvider) { _ in }
         }
     }
 }

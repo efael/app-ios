@@ -1,7 +1,8 @@
 //
-// Copyright 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2024-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -10,6 +11,7 @@ import Foundation
 
 enum MediaEventsTimelineFlowCoordinatorAction {
     case viewInRoomTimeline(TimelineItemIdentifier)
+    case displayMessageForwarding(MessageForwardingItem)
     case finished
 }
 
@@ -35,7 +37,7 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         self.flowParameters = flowParameters
     }
     
-    func start() {
+    func start(animated: Bool) {
         Task { await presentMediaEventsTimeline() }
     }
     
@@ -83,6 +85,7 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
                                                                         appSettings: flowParameters.appSettings,
                                                                         analytics: flowParameters.analytics,
                                                                         emojiProvider: flowParameters.emojiProvider,
+                                                                        linkMetadataProvider: flowParameters.linkMetadataProvider,
                                                                         userIndicatorController: flowParameters.userIndicatorController,
                                                                         timelineControllerFactory: flowParameters.timelineControllerFactory)
         
@@ -90,10 +93,13 @@ class MediaEventsTimelineFlowCoordinator: FlowCoordinatorProtocol {
         
         coordinator.actions
             .sink { [weak self] action in
+                guard let self else { return }
                 switch action {
+                case .displayMessageForwarding(let forwardingItem):
+                    actionsSubject.send(.displayMessageForwarding(forwardingItem))
                 case .viewInRoomTimeline(let itemID):
-                    self?.navigationStackCoordinator.pop(animated: false)
-                    self?.actionsSubject.send(.viewInRoomTimeline(itemID))
+                    navigationStackCoordinator.pop(animated: false)
+                    actionsSubject.send(.viewInRoomTimeline(itemID))
                 }
             }
             .store(in: &cancellables)

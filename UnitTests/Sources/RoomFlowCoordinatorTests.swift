@@ -1,7 +1,8 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -17,6 +18,10 @@ class RoomFlowCoordinatorTests: XCTestCase {
     var roomFlowCoordinator: RoomFlowCoordinator!
     var navigationStackCoordinator: NavigationStackCoordinator!
     var cancellables = Set<AnyCancellable>()
+    
+    override func tearDown() {
+        AppSettings.resetAllSettings()
+    }
     
     func testRoomPresentation() async throws {
         setupRoomFlowCoordinator()
@@ -218,6 +223,87 @@ class RoomFlowCoordinatorTests: XCTestCase {
         XCTAssert(navigationStackCoordinator.stackCoordinators.first is RoomScreenCoordinator)
     }
     
+    func testThreadedEventRoutes() async throws {
+        ServiceLocator.shared.settings.threadsEnabled = true
+        setupRoomFlowCoordinator()
+        
+        // Navigate directly to the threaded event
+        var configuration = JoinedRoomProxyMockConfiguration(id: "1")
+        var roomProxy = JoinedRoomProxyMock(configuration)
+        
+        var roomInfoSubject = CurrentValueSubject<RoomInfoProxyProtocol, Never>(RoomInfoProxyMock(configuration))
+        roomProxy.infoPublisher = roomInfoSubject.asCurrentValuePublisher()
+        
+        var mockedEvent = TimelineEventSDKMock()
+        mockedEvent.threadRootEventIdReturnValue = "1"
+        roomProxy.loadOrFetchEventDetailsForReturnValue = .success(mockedEvent)
+        
+        clientProxy.roomForIdentifierClosure = { _ in
+            .joined(roomProxy)
+        }
+        
+        try await process(route: .event(eventID: "2", roomID: "1", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, 1)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[0] is ThreadTimelineScreenCoordinator)
+        
+        // From the thread screen, navigate to another threaded event in the same room, and in the same thread.
+        let threadCoordinator = navigationStackCoordinator.stackCoordinators[0] as? ThreadTimelineScreenCoordinator
+        try await process(route: .childEvent(eventID: "3", roomID: "1", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, 1)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[0] is ThreadTimelineScreenCoordinator)
+        XCTAssertIdentical(navigationStackCoordinator.stackCoordinators[0], threadCoordinator)
+        // Would be nice to test if the focusEvent function has been called but there is no way to mock that.
+        
+        // From the thread screen, navigate to another threaded event in the same room, but in a different thread.
+        mockedEvent = TimelineEventSDKMock()
+        mockedEvent.threadRootEventIdReturnValue = "4"
+        roomProxy.loadOrFetchEventDetailsForReturnValue = .success(mockedEvent)
+        try await process(route: .childEvent(eventID: "5", roomID: "1", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, 2)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[0] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[1] is ThreadTimelineScreenCoordinator)
+        
+        // From the thread screen, navigate to another threaded event in a different room.
+        configuration = JoinedRoomProxyMockConfiguration(id: "2")
+        roomProxy = JoinedRoomProxyMock(configuration)
+        
+        roomInfoSubject = CurrentValueSubject<RoomInfoProxyProtocol, Never>(RoomInfoProxyMock(configuration))
+        roomProxy.infoPublisher = roomInfoSubject.asCurrentValuePublisher()
+        
+        mockedEvent = TimelineEventSDKMock()
+        mockedEvent.threadRootEventIdReturnValue = "1"
+        roomProxy.loadOrFetchEventDetailsForReturnValue = .success(mockedEvent)
+        
+        clientProxy.roomForIdentifierClosure = { _ in
+            .joined(roomProxy)
+        }
+        
+        try await process(route: .childEvent(eventID: "2", roomID: "2", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, 4)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[0] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[1] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[2] is RoomScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[3] is ThreadTimelineScreenCoordinator)
+        
+        // From the thread screen, navigate to an event of the same room that is not threaded
+        mockedEvent = TimelineEventSDKMock()
+        mockedEvent.threadRootEventIdReturnValue = nil
+        roomProxy.loadOrFetchEventDetailsForReturnValue = .success(mockedEvent)
+        
+        try await process(route: .childEvent(eventID: "3", roomID: "2", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssertEqual(navigationStackCoordinator.stackCoordinators.count, 5)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[0] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[1] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[2] is RoomScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[3] is ThreadTimelineScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators[4] is RoomScreenCoordinator)
+    }
+    
     func testShareMediaRoute() async throws {
         setupRoomFlowCoordinator()
         
@@ -293,6 +379,19 @@ class RoomFlowCoordinatorTests: XCTestCase {
         try await fulfillment.fulfill()
     }
     
+    // MARK: - Spaces
+    
+    func testSpacePermalink() async throws {
+        setupRoomFlowCoordinator()
+        
+        try await process(route: .room(roomID: "1", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        
+        try await process(route: .childRoom(roomID: "space1", via: []))
+        XCTAssert(navigationStackCoordinator.rootCoordinator is RoomScreenCoordinator)
+        XCTAssert(navigationStackCoordinator.stackCoordinators.first is SpaceScreenCoordinator)
+    }
+    
     // MARK: - Private
     
     private func process(route: AppRoute) async throws {
@@ -335,7 +434,9 @@ class RoomFlowCoordinatorTests: XCTestCase {
     
     private func setupRoomFlowCoordinator(asChildFlow: Bool = false, roomType: RoomType? = nil) {
         cancellables.removeAll()
-        clientProxy = ClientProxyMock(.init(userID: "hi@bob", roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms)))))
+        clientProxy = ClientProxyMock(.init(userID: "hi@bob",
+                                            roomSummaryProvider: RoomSummaryProviderMock(.init(state: .loaded(.mockRooms))),
+                                            spaceServiceConfiguration: .populated))
         timelineControllerFactory = TimelineControllerFactoryMock(.init())
         
         clientProxy.roomPreviewForIdentifierViaClosure = { [roomType] roomID, _ in
@@ -347,7 +448,7 @@ class RoomFlowCoordinatorTests: XCTestCase {
             }
         }
         
-        let navigationSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator())
+        let navigationSplitCoordinator = NavigationSplitCoordinator(placeholderCoordinator: PlaceholderScreenCoordinator(hideBrandChrome: false))
         navigationStackCoordinator = NavigationStackCoordinator()
         navigationSplitCoordinator.setDetailCoordinator(navigationStackCoordinator)
         
@@ -363,6 +464,7 @@ class RoomFlowCoordinatorTests: XCTestCase {
                                                   elementCallService: ElementCallServiceMock(.init()),
                                                   timelineControllerFactory: timelineControllerFactory,
                                                   emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                  linkMetadataProvider: LinkMetadataProvider(),
                                                   appMediator: AppMediatorMock.default,
                                                   appSettings: ServiceLocator.shared.settings,
                                                   appHooks: AppHooks(),

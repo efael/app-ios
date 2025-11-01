@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -124,8 +125,9 @@ class NotificationHandler {
                 }
                 
                 return .processedShouldDiscard
-            case .callNotify(let notifyType):
-                return await handleCallNotification(notifyType: notifyType,
+            case .rtcNotification(let notificationType, _):
+                return await handleCallNotification(notificationType: notificationType,
+                                                    rtcNotifyEventID: event.eventId(),
                                                     timestamp: event.timestamp(),
                                                     roomID: itemProxy.roomID,
                                                     roomDisplayName: itemProxy.roomDisplayName)
@@ -152,7 +154,8 @@ class NotificationHandler {
     
     /// Handle incoming call notifications.
     /// - Returns: A boolean indicating whether the notification was handled and should now be discarded.
-    private func handleCallNotification(notifyType: NotifyType,
+    private func handleCallNotification(notificationType: RtcNotificationType,
+                                        rtcNotifyEventID: String,
                                         timestamp: Timestamp,
                                         roomID: String,
                                         roomDisplayName: String) async -> NotificationProcessingResult {
@@ -168,7 +171,7 @@ class NotificationHandler {
         // - the main app picks this up in `PKPushRegistry.didReceiveIncomingPushWith` and
         // `CXProvider.reportNewIncomingCall` to show the system UI and handle actions on it.
         // N.B. this flow works properly only when background processing capabilities are enabled
-        guard notifyType == .ring else {
+        guard notificationType == .ring else {
             MXLog.info("Non-ringing call notification, handling as push notification")
             return .shouldDisplay
         }
@@ -206,7 +209,8 @@ class NotificationHandler {
         }
         
         let payload = [ElementCallServiceNotificationKey.roomID.rawValue: roomID,
-                       ElementCallServiceNotificationKey.roomDisplayName.rawValue: roomDisplayName]
+                       ElementCallServiceNotificationKey.roomDisplayName.rawValue: roomDisplayName,
+                       ElementCallServiceNotificationKey.rtcNotifyEventID.rawValue: rtcNotifyEventID]
         
         do {
             try await CXProvider.reportNewIncomingVoIPPushPayload(payload)

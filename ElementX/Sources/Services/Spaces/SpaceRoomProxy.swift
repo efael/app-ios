@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -16,10 +17,12 @@ class SpaceRoomProxy: SpaceRoomProxyProtocol {
     }
     
     lazy var id = spaceRoom.roomId
-    var name: String? { spaceRoom.name }
+    var name: String { spaceRoom.displayName }
+    var rawName: String? { spaceRoom.rawName }
     var avatarURL: URL? { spaceRoom.avatarUrl.flatMap(URL.init) }
     
     var isSpace: Bool { spaceRoom.roomType == .space }
+    var isDirect: Bool? { spaceRoom.isDirect }
     var childrenCount: Int { Int(spaceRoom.childrenCount) }
     
     var joinedMembersCount: Int { Int(spaceRoom.numJoinedMembers) }
@@ -31,4 +34,5 @@ class SpaceRoomProxy: SpaceRoomProxyProtocol {
     var worldReadable: Bool? { spaceRoom.worldReadable }
     var guestCanJoin: Bool { spaceRoom.guestCanJoin }
     var state: Membership? { spaceRoom.state }
+    var via: [String] { spaceRoom.via }
 }

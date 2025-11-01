@@ -8,6 +8,12 @@ jobs:
   build:
     name: Danger
     runs-on: macos-15
+    timeout-minutes: 15
+
+    concurrency:
+      # Only allow a single run of this workflow on each branch, automatically cancelling older runs.
+      group: ${{ format('danger-ci-{0}', github.ref) }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout

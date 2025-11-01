@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -45,7 +46,7 @@ struct RoomDetailsScreen: View {
                message: blockUserAlertMessage)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                if context.viewState.canEdit {
+                if context.viewState.canEditBaseInfo {
                     Button(L10n.actionEdit) {
                         context.send(viewAction: .processTapEdit)
                     }
@@ -397,7 +398,6 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                      notificationSettingsProxy: notificationSettingsProxy,
                      attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appMediator: AppMediatorMock.default,
                      appSettings: ServiceLocator.shared.settings)
     }
     
@@ -427,7 +427,6 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                      notificationSettingsProxy: notificationSettingsProxy,
                      attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appMediator: AppMediatorMock.default,
                      appSettings: ServiceLocator.shared.settings)
     }
     
@@ -466,7 +465,6 @@ struct RoomDetailsScreen_Previews: PreviewProvider, TestablePreview {
                      userIndicatorController: ServiceLocator.shared.userIndicatorController,
                      notificationSettingsProxy: notificationSettingsProxy,
                      attributedStringBuilder: AttributedStringBuilder(mentionBuilder: MentionBuilder()),
-                     appMediator: AppMediatorMock.default,
                      appSettings: ServiceLocator.shared.settings)
     }
 }

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -137,6 +138,11 @@ class ClientProxy: ClientProxyProtocol {
         verificationStateSubject.asCurrentValuePublisher()
     }
     
+    private let homeserverReachabilitySubject = CurrentValueSubject<NetworkMonitorReachability, Never>(.reachable)
+    var homeserverReachabilityPublisher: CurrentValuePublisher<NetworkMonitorReachability, Never> {
+        homeserverReachabilitySubject.asCurrentValuePublisher()
+    }
+    
     private let timelineMediaVisibilitySubject = CurrentValueSubject<TimelineMediaVisibility, Never>(.always)
     var timelineMediaVisibilityPublisher: CurrentValuePublisher<TimelineMediaVisibility, Never> {
         timelineMediaVisibilitySubject.asCurrentValuePublisher()
@@ -218,10 +224,10 @@ class ClientProxy: ClientProxyProtocol {
         })
         
         sendQueueStatusSubject
-            .combineLatest(networkMonitor.reachabilityPublisher)
+            .combineLatest(homeserverReachabilityPublisher)
             .debounce(for: 1.0, scheduler: DispatchQueue.main)
             .sink { enabled, reachability in
-                MXLog.info("Send queue status changed to enabled: \(enabled), reachability: \(reachability)")
+                MXLog.info("Send queue status changed to enabled: \(enabled), homeserver reachability: \(reachability)")
                 
                 if enabled == false, reachability == .reachable {
                     MXLog.info("Enabling all send queues")
@@ -405,6 +411,10 @@ class ClientProxy: ClientProxyProtocol {
         }
     }
     
+    func expireSyncSessions() async {
+        await syncService.expireSessions()
+    }
+    
     func accountURL(action: AccountManagementAction) async -> URL? {
         try? await client.accountUrl(action: action).flatMap(URL.init(string:))
     }
@@ -531,6 +541,17 @@ class ClientProxy: ClientProxyProtocol {
             MXLog.error("Failed knocking roomAlias: \(roomAlias) with error: \(error)")
             return .failure(.sdkError(error))
         }
+    }
+    
+    func canJoinRoom(with rules: [AllowRule]) -> Bool {
+        for rule in rules {
+            if case let .roomMembership(roomID) = rule,
+               let room = try? client.getRoom(roomId: roomID),
+               room.membership() == .joined {
+                return true
+            }
+        }
+        return false
     }
     
     func uploadMedia(_ media: MediaInfo) async -> Result<String, ClientProxyError> {
@@ -926,12 +947,11 @@ class ClientProxy: ClientProxyProtocol {
             
             switch state {
             case .running, .terminated, .idle:
-                break
+                homeserverReachabilitySubject.send(.reachable)
+            case .offline:
+                homeserverReachabilitySubject.send(.unreachable)
             case .error:
                 restartSync()
-            case .offline:
-                // This needs to be enabled in the client builder first to be actually used
-                break
             }
         })
     }
@@ -1182,6 +1202,7 @@ private struct ClientProxyServices {
         let syncService = try await client
             .syncService()
             .withCrossProcessLock()
+            .withOfflineMode()
             .withSharePos(enable: true)
             .finish()
         

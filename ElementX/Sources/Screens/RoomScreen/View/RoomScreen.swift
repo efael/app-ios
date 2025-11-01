@@ -1,5 +1,6 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -65,6 +66,7 @@ struct RoomScreen: View {
                         .environment(\.shouldAutomaticallyLoadImages, !timelineContext.viewState.hideTimelineMedia)
                 }
             }
+            .toolbarRole(RoomHeaderView.toolbarRole)
             .navigationTitle(L10n.screenRoomTitle) // Hidden but used for back button text.
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
@@ -77,20 +79,26 @@ struct RoomScreen: View {
     
     @ViewBuilder
     private var pinnedItemsBanner: some View {
-        Group {
+        // Color.clear and clipped() are required for iOS 26 transparent nav bar
+        VStack(spacing: 0) {
             if context.viewState.shouldShowPinnedEventsBanner {
                 PinnedItemsBannerView(state: context.viewState.pinnedEventsBannerState,
                                       onMainButtonTap: { context.send(viewAction: .tappedPinnedEventsBanner) },
                                       onViewAllButtonTap: { context.send(viewAction: .viewAllPins) })
                     .transition(.move(edge: .top))
+            } else {
+                Color.clear
+                    .allowsHitTesting(false)
             }
         }
         .animation(.elementDefault, value: context.viewState.shouldShowPinnedEventsBanner)
+        .clipped()
     }
     
     @ViewBuilder
     private var knockRequestsBanner: some View {
-        Group {
+        // Color.clear and clipped() are required for iOS 26 transparent nav bar
+        VStack(spacing: 0) {
             if context.viewState.shouldSeeKnockRequests {
                 KnockRequestsBannerView(requests: context.viewState.displayedKnockRequests,
                                         onDismiss: dismissKnockRequestsBanner,
@@ -99,9 +107,13 @@ struct RoomScreen: View {
                                         mediaProvider: context.mediaProvider)
                     .padding(.top, 16)
                     .transition(.move(edge: .top))
+            } else {
+                Color.clear
+                    .allowsHitTesting(false)
             }
         }
         .animation(.elementDefault, value: context.viewState.shouldSeeKnockRequests)
+        .clipped()
     }
     
     private func dismissKnockRequestsBanner() {
@@ -264,6 +276,7 @@ struct RoomScreen_Previews: PreviewProvider, TestablePreview {
                                                   appSettings: ServiceLocator.shared.settings,
                                                   analyticsService: ServiceLocator.shared.analytics,
                                                   emojiProvider: EmojiProvider(appSettings: ServiceLocator.shared.settings),
+                                                  linkMetadataProvider: LinkMetadataProvider(),
                                                   timelineControllerFactory: TimelineControllerFactoryMock(.init()))
         
         return .init(room: roomViewModel, timeline: timelineViewModel)

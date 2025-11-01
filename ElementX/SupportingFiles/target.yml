@@ -228,7 +228,6 @@ targets:
     - package: AnalyticsEvents
     - package: Collections
     - package: DeviceKit
-    - package: DTCoreText
     - package: EmbeddedElementCall
     - package: KeychainAccess
     - package: Kingfisher
@@ -248,6 +247,7 @@ targets:
     - package: Emojibase
     - package: WysiwygComposer
     - package: SwiftOGG
+    - package: SwiftSoup
     - package: DSWaveformImage
       product: DSWaveformImageViews
 

@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -47,15 +48,18 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
         self.analyticsService = analyticsService
         isPictureInPictureAllowed = allowPictureInPicture
         
+        var isGenericCallLink = false
         switch configuration.kind {
         case .genericCallLink(let url):
             widgetDriver = GenericCallLinkWidgetDriver(url: url)
+            isGenericCallLink = true
         case .roomCall(let roomProxy, let clientProxy, _, _, _, _):
             guard let deviceID = clientProxy.deviceID else { fatalError("Missing device ID for the call.") }
             widgetDriver = roomProxy.elementCallWidgetDriver(deviceID: deviceID)
         }
         
         super.init(initialViewState: CallScreenViewState(script: CallScreenJavaScriptMessageName.allCasesInjectionScript,
+                                                         isGenericCallLink: isGenericCallLink,
                                                          certificateValidator: appHooks.certificateValidatorHook))
         
         elementCallService.actions
@@ -150,7 +154,7 @@ class CallScreenViewModel: CallScreenViewModelType, CallScreenViewModelProtocol 
     private func handleWidgetAction(message: String) async {
         if timeoutTask != nil,
            let decodedMessage = try? DecodedWidgetMessage.decode(message: message),
-           decodedMessage.hasJoined {
+           decodedMessage.hasLoaded {
             // This means that the call room was joined succesfully, we can stop the timeout task
             timeoutTask = nil
         }

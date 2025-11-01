@@ -1,5 +1,6 @@
 //
-// Copyright 2023, 2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2023-2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
@@ -57,25 +58,25 @@ extension XCUIApplication {
             }
             
             if alerts.count > 0 {
-                alerts.firstMatch.buttons["OK"].tap()
+                alerts.firstMatch.buttons["OK"].firstMatch.tap()
             }
         }
         
         webAuthenticationSessionAlertContinueButton.tap(.center)
         
-        let webAuthenticationView = webViews.firstMatch
+        let webAuthenticationView = XCUIApplication(bundleIdentifier: "com.apple.SafariViewService")
         XCTAssertTrue(webAuthenticationView.waitForExistence(timeout: 10.0))
         webAuthenticationView.tap(.top) // Tap the web view to properly focus the app again.
         
         let webUsernameTextField = textFields["Username or Email"]
         XCTAssertTrue(webUsernameTextField.waitForExistence(timeout: 10.0))
         webUsernameTextField.clearAndTypeText(username, app: self)
-        buttons["Done"].tap() // Dismiss the keyboard so that the password text field is fully hittable.
+        webAuthenticationView.buttons["selected"].firstMatch.tap() // Dismiss the keyboard so that the password text field is fully hittable.
         
         let webPasswordTextField = secureTextFields["Password"]
         XCTAssertTrue(webPasswordTextField.waitForExistence(timeout: 10.0))
         webPasswordTextField.clearAndTypeText(password, app: self)
-        buttons["Done"].tap() // Dismiss the keyboard so that the continue button is fully hittable.
+        webAuthenticationView.buttons["selected"].firstMatch.tap() // Dismiss the keyboard so that the continue button is fully hittable.
         
         let webLoginButton = webAuthenticationView.buttons["Continue"]
         XCTAssertTrue(webLoginButton.waitForExistence(timeout: 10.0))
@@ -123,7 +124,7 @@ extension XCUIApplication {
         logoutButton.tap(.center)
         
         // Confirm logout
-        let alertLogoutButton = alerts.firstMatch.buttons["Sign out"]
+        let alertLogoutButton = alerts.firstMatch.buttons["Sign out"].firstMatch
         XCTAssertTrue(alertLogoutButton.waitForExistence(timeout: 10.0))
         alertLogoutButton.tap(.center)
         

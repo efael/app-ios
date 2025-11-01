@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -29,9 +30,13 @@ struct MediaUploadPreviewScreen: View {
             .ignoresSafeArea(edges: [.horizontal])
             .safeAreaInset(edge: .top) {
                 if context.viewState.mediaURLs.count > 1 {
-                    Text("\(currentIndex + 1) / \(context.viewState.mediaURLs.count)")
-                        .font(.compound.bodySM)
-                        .foregroundColor(.compound.textSecondary)
+                    Text(L10n.screenMediaUploadPreviewItemCount(currentIndex + 1, context.viewState.mediaURLs.count))
+                        .font(.compound.bodyMD)
+                        .foregroundColor(.compound.textPrimary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(.compound.bgBadgeDefault)
+                        .clipShape(.capsule)
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {

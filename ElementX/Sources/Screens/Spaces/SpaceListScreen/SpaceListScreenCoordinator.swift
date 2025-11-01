@@ -1,7 +1,8 @@
 //
+// Copyright 2025 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -13,6 +14,7 @@ import SwiftUI
 struct SpaceListScreenCoordinatorParameters {
     let userSession: UserSessionProtocol
     let selectedSpacePublisher: CurrentValuePublisher<String?, Never>
+    let appSettings: AppSettings
     let userIndicatorController: UserIndicatorControllerProtocol
 }
 
@@ -37,6 +39,7 @@ final class SpaceListScreenCoordinator: CoordinatorProtocol {
         
         viewModel = SpaceListScreenViewModel(userSession: parameters.userSession,
                                              selectedSpacePublisher: parameters.selectedSpacePublisher,
+                                             appSettings: parameters.appSettings,
                                              userIndicatorController: parameters.userIndicatorController)
     }
     

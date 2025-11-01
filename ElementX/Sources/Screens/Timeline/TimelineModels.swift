@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -107,9 +108,12 @@ struct TimelineViewState: BindableState {
     var canCurrentUserPin = false
     var canCurrentUserKick = false
     var canCurrentUserBan = false
+    
+    var hideTimelineMedia: Bool
+    
     var isViewSourceEnabled: Bool
     var areThreadsEnabled: Bool
-    var hideTimelineMedia: Bool
+    var linkPreviewsEnabled: Bool
     
     let hasPredecessor: Bool
         
@@ -130,6 +134,8 @@ struct TimelineViewState: BindableState {
     var roomNameForAliasResolver: (@MainActor (String) -> String?)?
     
     var emojiProvider: EmojiProviderProtocol
+    
+    var linkMetadataProvider: LinkMetadataProviderProtocol?
     
     var mapTilerConfiguration: MapTilerConfiguration
     

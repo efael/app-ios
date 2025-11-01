@@ -1,7 +1,8 @@
 //
-// Copyright 2022-2024 New Vector Ltd.
+// Copyright 2025 Element Creations Ltd.
+// Copyright 2022-2025 New Vector Ltd.
 //
-// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial.
 // Please see LICENSE files in the repository root for full details.
 //
 
@@ -23,9 +24,11 @@ struct ThreadTimelineScreen: View {
         
     var body: some View {
         TimelineView(timelineContext: timelineContext)
-            .navigationTitle("Thread")
-            .navigationBarTitleDisplayMode(.inline)
             .background(.compound.bgCanvasDefault)
+            .toolbarRole(RoomHeaderView.toolbarRole)
+            .navigationTitle(L10n.commonThread)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbar }
             .toolbarBackground(.visible, for: .navigationBar) // Fix the toolbar's background.
             .timelineMediaPreview(viewModel: $context.mediaPreviewViewModel)
             .overlay(alignment: .bottomTrailing) {
@@ -50,6 +53,21 @@ struct ThreadTimelineScreen: View {
             composerToolbar
         } else {
             ComposerDisabledView()
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        // .principal + .primaryAction works better than .navigation leading + trailing
+        // as the latter disables interaction in the action button for rooms with long names
+        ToolbarItem(placement: .principal) {
+            RoomHeaderView(roomName: L10n.commonThread,
+                           roomSubtitle: context.viewState.roomTitle,
+                           roomAvatar: context.viewState.roomAvatar,
+                           dmRecipientVerificationState: context.viewState.dmRecipientVerificationState,
+                           mediaProvider: context.mediaProvider)
+                // Using a button stops it from getting truncated in the navigation bar
+                .contentShape(.rect)
         }
     }
     
